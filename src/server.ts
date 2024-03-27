@@ -1,55 +1,102 @@
 import express, { Application } from "express";
 import cors from "cors";
-import "dotenv/config";
 import morgan from "morgan";
 import { db } from "./db_connection";
 import { user } from "./models/user";
-import { userRouter } from "./routes/userRoute";
-import Server from "./index";
+import Routes from "./routes";
+import "dotenv/config";
 
-const app: Application = express();
+class Server {
+  private static instance: Server;
+  private app: Application = express();
+  private PORT: number = 8000;
 
-const server = new Server(app);
-
-// db connection
-db.connect((err) => {
-  if (err) {
-    console.log("error while connecting db");
-    console.log(err);
+  private constructor() {
+    this.config();
+    this.setUpRoutes();
+    this.start();
   }
-  console.log("Db connected successfully");
 
-  // creating db
-  db.query("CREATE DATABASE IF NOT EXISTS usersDB", (err) => {
-    if (err) console.log(err, "error while creating db");
-    console.log("database created successfully");
-  });
-
-  // creating user table
-  db.query("USE usersDB", (err): void => {
-    if (err) console.log(err, "error while selecting db");
-    else {
-      console.log("Db selected successfully");
+  static getInstance() {
+    if (!this.instance) {
+      Server.instance = new Server();
     }
-    db.query(user, (err): void => {
-      if (err) console.log(err, "unable to create table");
-      else {
-        console.log("user table creation was successfull");
+    return Server.instance;
+  }
+
+  // setter function for port number
+  set portNumber(port: number) {
+    this.PORT = port;
+  }
+
+  // getter for port number
+
+  get portNumber(): number {
+    return this.PORT;
+  }
+
+  //   config method
+  private config(): void {
+    this.app.use(cors());
+    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(express.json());
+    this.app.use(morgan("combined"));
+  }
+
+  //   routes
+  private setUpRoutes(): void {
+    new Routes(this.app);
+  }
+
+  //   starting the server
+  private start() {
+    // db connection
+    db.connect((err) => {
+      if (err) {
+        console.log("error while connecting db");
+        console.log(err);
       }
-    });
-  });
-});
+      console.log("Db connected successfully");
 
-// listening
-app
-  .listen(8000, (): void => {
-    console.log("Server is Listening");
-  })
-  .on("error", (err: any) => {
-    if (err.code === "EADDRINUSE") {
-      console.log("server already in use");
-    } else {
-      console.log("unable to run a server");
-      console.log(err);
-    }
-  });
+      // creating db
+      db.query("CREATE DATABASE IF NOT EXISTS usersDB", (err) => {
+        if (err) console.log(err, "error while creating db");
+        console.log("database created successfully");
+      });
+
+      // creating user table
+      db.query("USE usersDB", (err): void => {
+        if (err) console.log(err, "error while selecting db");
+        else {
+          console.log("Db selected successfully");
+        }
+        db.query(user, (err): void => {
+          if (err) console.log(err, "unable to create table");
+          else {
+            console.log("user table creation was successfull");
+          }
+        });
+      });
+    });
+
+    this.app
+      .listen(this.PORT, (): void => {
+        console.log(`Server is listening on ${this.PORT}`);
+      })
+      .on("error", (err: any) => {
+        if (err.code === "EADDRINUSE") {
+          console.log("server already in use");
+        } else {
+          console.log("unable to run a server");
+          console.log(err);
+        }
+      });
+  }
+}
+
+const nodeServer = Server.getInstance();
+
+// configuring the port number
+nodeServer.portNumber = process.env.PORT
+  ? parseInt(process.env.PORT)
+  : nodeServer.portNumber;

@@ -9,9 +9,28 @@ const morgan_1 = __importDefault(require("morgan"));
 const db_connection_1 = require("./db_connection");
 const user_1 = require("./models/user");
 const routes_1 = __importDefault(require("./routes"));
+require("dotenv/config");
 class Server {
-    constructor(app) {
-        this.app = app;
+    constructor() {
+        this.app = (0, express_1.default)();
+        this.PORT = 8000;
+        this.config();
+        this.setUpRoutes();
+        this.start();
+    }
+    static getInstance() {
+        if (!this.instance) {
+            Server.instance = new Server();
+        }
+        return Server.instance;
+    }
+    // setter function for port number
+    set portNumber(port) {
+        this.PORT = port;
+    }
+    // getter for port number
+    get portNumber() {
+        return this.PORT;
     }
     //   config method
     config() {
@@ -56,8 +75,8 @@ class Server {
             });
         });
         this.app
-            .listen(8000, () => {
-            console.log("Server is Listening");
+            .listen(this.PORT, () => {
+            console.log(`Server is listening on ${this.PORT}`);
         })
             .on("error", (err) => {
             if (err.code === "EADDRINUSE") {
@@ -70,5 +89,8 @@ class Server {
         });
     }
 }
-const app = (0, express_1.default)();
-new Server(app);
+const nodeServer = Server.getInstance();
+// configuring the port number
+nodeServer.portNumber = process.env.PORT
+    ? parseInt(process.env.PORT)
+    : nodeServer.portNumber;
