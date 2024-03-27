@@ -1,18 +1,23 @@
-import express from "express";
-import {
-  deleteUser,
-  newUser,
-  updateUser,
-  user,
-} from "../controllers/userController";
-import { checkUser } from "../middleware/userMiddleware";
+import userController from "../controllers/userController";
+import middlewareController from "../middleware/userMiddleware";
 
-export const userRouter = express.Router();
+import { Router } from "express";
 
-userRouter.post("/newuser", newUser);
+class userRoutes {
+  router = Router();
+  userCtrl = new userController();
+  middlewareCtrl = new middlewareController();
+  constructor() {
+    this.initiateRoutes();
+  }
+  initiateRoutes() {
+    this.router.route("/newuser").post(this.userCtrl.newUser);
+    this.router
+      .route("/user/:id")
+      .get(this.middlewareCtrl.userCheck, this.userCtrl.getUser)
+      .patch(this.middlewareCtrl.userCheck, this.userCtrl.updateUser)
+      .delete(this.middlewareCtrl.userCheck, this.userCtrl.deleteUser);
+  }
+}
 
-userRouter
-  .route("/user/:id")
-  .get(user)
-  .patch(checkUser, updateUser)
-  .delete(checkUser, deleteUser);
+export default new userRoutes().router;
