@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../db_connection";
 import { RowDataPacket } from "mysql2";
+import bcrypt from "bcrypt";
 
 export default class userController {
   constructor() {}
@@ -36,10 +37,12 @@ export default class userController {
 
   async newUser(req: Request, res: Response) {
     const { username, email, password } = req.body;
+    // hash password
+    const hashedPassword: string = bcrypt.hashSync(password, 10);
     try {
       db.query(
         "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-        [username, email, password],
+        [username, email, hashedPassword],
         (err, result: RowDataPacket[] | any): Response => {
           if (err) {
             return res.status(500).json({ message: "User Already exsists!!!" });
