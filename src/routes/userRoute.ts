@@ -1,6 +1,5 @@
 import userController from "../controllers/userController";
 import middlewareController from "../middleware/userMiddleware";
-
 import { Router } from "express";
 
 class userRoutes {

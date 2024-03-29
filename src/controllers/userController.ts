@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { db } from "../db_connection";
 import { RowDataPacket } from "mysql2";
 import bcrypt from "bcrypt";
+import { User } from "../models/user";
 
 export default class userController {
   constructor() {}
@@ -36,7 +37,7 @@ export default class userController {
   }
 
   async newUser(req: Request, res: Response) {
-    const { username, email, password } = req.body;
+    const { username, email, password }: User = req.body;
     // hash password
     const hashedPassword: string = bcrypt.hashSync(password, 10);
     try {
@@ -63,7 +64,7 @@ export default class userController {
 
   async updateUser(req: Request, res: Response) {
     const id = req.params.id;
-    const { username, email, password } = req.body;
+    const { username, email, password }: User = req.body;
     try {
       let updateQuery = "UPDATE users SET";
       const updateValues = [];

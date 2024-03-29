@@ -8,8 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_connection_1 = require("../db_connection");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 class userController {
     constructor() { }
     getUser(req, res) {
@@ -43,8 +47,10 @@ class userController {
     newUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const { username, email, password } = req.body;
+            // hash password
+            const hashedPassword = bcrypt_1.default.hashSync(password, 10);
             try {
-                db_connection_1.db.query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, password], (err, result) => {
+                db_connection_1.db.query("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, hashedPassword], (err, result) => {
                     if (err) {
                         return res.status(500).json({ message: "User Already exsists!!!" });
                     }

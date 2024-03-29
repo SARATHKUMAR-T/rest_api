@@ -3,13 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+require("dotenv/config");
+const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
 const db_connection_1 = require("./db_connection");
-const user_1 = require("./models/user");
 const routes_1 = __importDefault(require("./routes"));
-require("dotenv/config");
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -65,7 +64,7 @@ class Server {
                 else {
                     console.log("Db selected successfully");
                 }
-                db_connection_1.db.query(user_1.user, (err) => {
+                db_connection_1.db.query("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), email VARCHAR(255) UNIQUE,password VARCHAR(255))", (err) => {
                     if (err)
                         console.log(err, "unable to create table");
                     else {
