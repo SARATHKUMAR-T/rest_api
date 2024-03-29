@@ -1,10 +1,9 @@
-import express, { Application } from "express";
 import cors from "cors";
+import "dotenv/config";
+import express, { Application } from "express";
 import morgan from "morgan";
 import { db } from "./db_connection";
-import { user } from "./models/user";
 import Routes from "./routes";
-import "dotenv/config";
 
 class Server {
   private static instance: Server;
@@ -70,12 +69,15 @@ class Server {
         else {
           console.log("Db selected successfully");
         }
-        db.query(user, (err): void => {
-          if (err) console.log(err, "unable to create table");
-          else {
-            console.log("user table creation was successfull");
+        db.query(
+          "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), email VARCHAR(255) UNIQUE,password VARCHAR(255))",
+          (err): void => {
+            if (err) console.log(err, "unable to create table");
+            else {
+              console.log("user table creation was successfull");
+            }
           }
-        });
+        );
       });
     });
 

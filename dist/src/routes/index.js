@@ -8,6 +8,14 @@ class Routes {
     constructor(app) {
         // user routes
         app.use("", userRoute_1.default);
+        app.all("*", this.unhandledRouter);
+    }
+    // function for unhandled routes
+    unhandledRouter(req, res) {
+        res.status(404).json({
+            status: "fail",
+            message: `cannot find ${req.originalUrl} on this server !`,
+        });
     }
 }
 exports.default = Routes;
