@@ -4,13 +4,16 @@ import { RowDataPacket } from "mysql2";
 
 export default class middlewareController {
   constructor() {}
-
-  async userCheck(req: Request, res: Response, next: NextFunction) {
-    const id = req.params.id;
+  async userCheck(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    val: String
+  ) {
     try {
       db.query(
-        "SELECT * FROM users WHERE id = ?",
-        [id],
+        "SELECT * FROM users WHERE user_id = ?",
+        [val],
         (err, result: RowDataPacket[]): Response | void => {
           if (err)
             throw new Error("Error occuried while fetching user details");

@@ -1,5 +1,5 @@
 import userController from "../controllers/userController";
-import middlewareController from "../middleware/userMiddleware";
+import middlewareController from "../middlewares/userMiddleware";
 import { Router } from "express";
 
 class userRoutes {
@@ -11,11 +11,15 @@ class userRoutes {
   }
   initiateRoutes() {
     this.router.route("/newuser").post(this.userCtrl.newUser);
+    // param middleware
+    this.router.param("id", this.middlewareCtrl.userCheck);
     this.router
       .route("/user/:id")
-      .get(this.middlewareCtrl.userCheck, this.userCtrl.getUser)
-      .patch(this.middlewareCtrl.userCheck, this.userCtrl.updateUser)
-      .delete(this.middlewareCtrl.userCheck, this.userCtrl.deleteUser);
+      .get(this.userCtrl.getUser)
+      .patch(this.userCtrl.updateUser)
+      .delete(this.userCtrl.deleteUser);
+
+    this.router.route("/report/:id").get(this.userCtrl.getReport);
   }
 }
 

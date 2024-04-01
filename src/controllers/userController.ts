@@ -1,112 +1,143 @@
+import Excel from "exceljs";
 import { Request, Response } from "express";
-import { db } from "../db_connection";
 import { RowDataPacket } from "mysql2";
-import bcrypt from "bcrypt";
-import { User } from "../models/user";
+import * as path from "path";
+import { db } from "../db_connection";
+import userServ from "../services/userService";
+import { User } from "../types/types";
+import Encrypter from "../utils/bcrypter";
 
 export default class userController {
   constructor() {}
 
+  // get user
   async getUser(req: Request, res: Response) {
     const id = req.params.id;
     try {
-      db.query(
-        "SELECT * FROM users WHERE id = ?",
-        [id],
-        (err, result: RowDataPacket[]): Response | void => {
-          if (err)
-            throw new Error("Error occuried while fetching user details");
-          else {
-            if (result.length === 0) {
-              return res.status(200).json({
-                message: "No User Found",
-              });
-            } else {
-              return res.status(200).json({
-                message: "data retrived successfully",
-                user: result,
-              });
-            }
-          }
-        }
-      );
+      // calling service layer
+      const result = await userServ.fetchUser(id);
+      return res.status(200).json({
+        status: "true",
+        message: "user fetched successfully",
+        user: result,
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({ message: error });
     }
   }
 
+  // adding new user
   async newUser(req: Request, res: Response) {
-    const { username, email, password }: User = req.body;
-    // hash password
-    const hashedPassword: string = bcrypt.hashSync(password, 10);
+    let { first_name, last_name, email, password }: User = req.body;
+    try {
+      const result = await userServ.addUser({
+        first_name,
+        last_name,
+        email,
+        password,
+      });
+      console.log(result, "result for adding user");
+      return res.status(200).json({
+        status: "true",
+        message: "user added successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: error });
+    }
+  }
+  // updating user
+  async updateUser(req: Request, res: Response) {
+    const id = req.params.id;
+    try {
+      const result = await userServ.updateUser(req.body, id);
+      res.status(200).json({
+        status: "true",
+        message: "user updation successfull",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: error });
+    }
+  }
+
+  // deleting user
+  async deleteUser(req: Request, res: Response) {
+    const id = req.params.id;
+    try {
+      const result = await userServ.removeUser(id);
+      res.status(200).json({
+        status: "true",
+        message: "User Deleted Successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: error });
+    }
+  }
+
+  // get report
+  async getReport(req: Request, res: Response) {
+    const id = req.params.id;
     try {
       db.query(
-        "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-        [username, email, hashedPassword],
-        (err, result: RowDataPacket[] | any): Response => {
-          if (err) {
-            return res.status(500).json({ message: "User Already exsists!!!" });
-          } else {
-            console.log(result, "result");
+        `SELECT 
+    CONCAT(users.first_name, " ", users.last_name) AS user_name,
+    employee_info.employee_id,
+    employee_info.role_,
+    address.address,
+    employee_info.employee_id ,
+	   transactions.amount,
+    transactions.payment_date
+FROM 
+    users
+INNER JOIN 
+    address ON users.user_id = address.user_id
+INNER JOIN 
+    employee_info ON users.user_id = employee_info.user_id
+INNER JOIN 
+    transactions ON employee_info.employee_id = transactions.employee_id
+WHERE 
+users.user_id = ${id}
+;
+`,
+        async (err, result: any) => {
+          if (err) throw new Error("Error occurred while deleting user");
+          else {
+            //  creation of excel sheet
+            const workbook = new Excel.Workbook();
+            const worksheet = workbook.addWorksheet("employee report");
+
+            const reportColumns = [
+              { key: "employee_id", header: "Employee Id" },
+              { key: "user_name", header: "Employee Name" },
+              { key: "role_", header: "Role" },
+              { key: "address", header: "Address" },
+              { key: "amount", header: "Salary" },
+              { key: "payment_date", header: "Pay Date" },
+            ];
+            worksheet.columns = reportColumns;
+
+            result.forEach((item: any) => {
+              worksheet.addRow(item);
+            });
+
+            const filepath = path.format({
+              dir: "./src/reports",
+              base: `${result[0].user_name}'s report.xlsx`,
+            });
+
+            await workbook.xlsx.writeFile(filepath);
+
             return res.status(200).json({
-              message: "New user Created Successfully",
-              id: result.insertId,
+              message: "Report fetched successfully",
+              file: filepath,
+              result,
             });
           }
         }
       );
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: error });
-    }
-  }
-
-  async updateUser(req: Request, res: Response) {
-    const id = req.params.id;
-    const { username, email, password }: User = req.body;
-    try {
-      let updateQuery = "UPDATE users SET";
-      const updateValues = [];
-      if (username) {
-        updateQuery += " username = ?,";
-        updateValues.push(username);
-      }
-      if (email) {
-        updateQuery += " email = ?,";
-        updateValues.push(email);
-      }
-      if (password) {
-        updateQuery += " password = ?,";
-        updateValues.push(password);
-      }
-      updateQuery = updateQuery.slice(0, -1);
-      updateQuery += " WHERE id = ?";
-      updateValues.push(id);
-
-      db.query(updateQuery, updateValues, (err): Response => {
-        if (err) throw new Error("Error occurred while updating user");
-        else {
-          return res.status(200).json({ message: "User updated successfully" });
-        }
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: error });
-    }
-  }
-
-  async deleteUser(req: Request, res: Response) {
-    const id = req.params.id;
-    try {
-      db.query("DELETE FROM users WHERE id=?", [id], (err) => {
-        if (err) throw new Error("Error occurred while deleting user");
-        else {
-          return res.status(200).json({
-            message: "User deletion successfull",
-          });
-        }
-      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({ message: error });

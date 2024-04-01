@@ -8,7 +8,7 @@ import Routes from "./routes";
 class Server {
   private static instance: Server;
   private app: Application = express();
-  private PORT: number = 8000;
+  private PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 8000;
 
   private constructor() {
     this.config();
@@ -36,6 +36,7 @@ class Server {
 
   //   config method
   private config(): void {
+    this.app.use(express.static(`${__dirname}/reports`));
     this.app.use(cors());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
@@ -55,27 +56,20 @@ class Server {
         console.log("error while connecting db");
         console.log(err);
       }
-      console.log("Db connected successfully");
 
       // creating db
       db.query("CREATE DATABASE IF NOT EXISTS usersDB", (err) => {
         if (err) console.log(err, "error while creating db");
-        console.log("database created successfully");
       });
 
       // creating user table
-      db.query("USE usersDB", (err): void => {
+      db.query("USE task1", (err): void => {
         if (err) console.log(err, "error while selecting db");
-        else {
-          console.log("Db selected successfully");
-        }
+
         db.query(
           "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), email VARCHAR(255) UNIQUE,password VARCHAR(255))",
           (err): void => {
             if (err) console.log(err, "unable to create table");
-            else {
-              console.log("user table creation was successfull");
-            }
           }
         );
       });
