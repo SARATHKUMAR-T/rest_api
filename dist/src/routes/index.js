@@ -4,17 +4,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const userRoute_1 = __importDefault(require("./userRoute"));
+const errorHandler_1 = __importDefault(require("../errorHandler/errorHandler"));
 class Routes {
     constructor(app) {
         // user routes
+        this.erroHandler = new errorHandler_1.default();
         app.use("", userRoute_1.default);
-        app.all("*", this.unhandledRouter);
-    }
-    // function for unhandled routes
-    unhandledRouter(req, res) {
-        res.status(404).json({
-            status: "fail",
-            message: `cannot find ${req.originalUrl} on this server !`,
+        app.all("*", (req, res, next) => {
+            const err = new Error(`cannot find ${req.originalUrl} on this server`);
+            err.status = "fail";
+            err.statusCode = 404;
         });
     }
 }

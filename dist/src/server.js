@@ -12,7 +12,7 @@ const routes_1 = __importDefault(require("./routes"));
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
-        this.PORT = 8000;
+        this.PORT = process.env.PORT ? parseInt(process.env.PORT) : 8000;
         this.config();
         this.setUpRoutes();
         this.start();
@@ -33,6 +33,7 @@ class Server {
     }
     //   config method
     config() {
+        this.app.use(express_1.default.static(`${__dirname}/reports`));
         this.app.use((0, cors_1.default)());
         this.app.use(express_1.default.urlencoded({ extended: true }));
         this.app.use(express_1.default.json());
@@ -50,26 +51,18 @@ class Server {
                 console.log("error while connecting db");
                 console.log(err);
             }
-            console.log("Db connected successfully");
             // creating db
             db_connection_1.db.query("CREATE DATABASE IF NOT EXISTS usersDB", (err) => {
                 if (err)
                     console.log(err, "error while creating db");
-                console.log("database created successfully");
             });
             // creating user table
-            db_connection_1.db.query("USE usersDB", (err) => {
+            db_connection_1.db.query("USE task1", (err) => {
                 if (err)
                     console.log(err, "error while selecting db");
-                else {
-                    console.log("Db selected successfully");
-                }
                 db_connection_1.db.query("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), email VARCHAR(255) UNIQUE,password VARCHAR(255))", (err) => {
                     if (err)
                         console.log(err, "unable to create table");
-                    else {
-                        console.log("user table creation was successfull");
-                    }
                 });
             });
         });

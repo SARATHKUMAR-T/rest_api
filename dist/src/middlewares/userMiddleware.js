@@ -15,7 +15,7 @@ class middlewareController {
     userCheck(req, res, next, val) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                db_connection_1.db.query("SELECT * FROM users WHERE id = ?", [val], (err, result) => {
+                db_connection_1.db.query("SELECT * FROM users WHERE user_id = ?", [val], (err, result) => {
                     if (err)
                         throw new Error("Error occuried while fetching user details");
                     else {

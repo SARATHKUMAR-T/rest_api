@@ -1,17 +1,19 @@
 import { Application, Request, Response } from "express";
 import userRouter from "./userRoute";
+import errorHandler from "../errorHandler/errorHandler";
 
 export default class Routes {
+  erroHandler = new errorHandler();
   constructor(app: Application) {
     // user routes
+
     app.use("", userRouter);
-    app.all("*", this.unhandledRouter);
-  }
-  // function for unhandled routes
-  private unhandledRouter(req: Request, res: Response) {
-    res.status(404).json({
-      status: "fail",
-      message: `cannot find ${req.originalUrl} on this server !`,
+    app.all("*", (req, res, next) => {
+      const err: any = new Error(
+        `cannot find ${req.originalUrl} on this server`
+      );
+      err.status = "fail";
+      err.statusCode = 404;
     });
   }
 }
