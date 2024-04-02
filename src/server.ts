@@ -2,7 +2,7 @@ import cors from "cors";
 import "dotenv/config";
 import express, { Application } from "express";
 import morgan from "morgan";
-import { db } from "./db_connection";
+import { db } from "./config/db_connection";
 import Routes from "./routes";
 
 class Server {
@@ -16,7 +16,7 @@ class Server {
     this.start();
   }
 
-  static getInstance() {
+  public static getInstance() {
     if (!this.instance) {
       Server.instance = new Server();
     }

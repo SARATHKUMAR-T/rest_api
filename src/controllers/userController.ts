@@ -1,25 +1,35 @@
 import Excel from "exceljs";
 import { Request, Response } from "express";
-import { RowDataPacket } from "mysql2";
+import fs from "fs";
+import { Base64 } from "js-base64";
 import * as path from "path";
-import { db } from "../db_connection";
 import userServ from "../services/userService";
-import { User } from "../types/types";
-import Encrypter from "../utils/bcrypter";
+import { ConfigResponse } from "../types/Response";
+import { User } from "../types/User";
 
-export default class userController {
-  constructor() {}
+class userController {
+  private static instance: userController;
+
+  private constructor() {}
+
+  public static getInstance(): userController {
+    if (!userController.instance) {
+      userController.instance = new userController();
+    }
+    return userController.instance;
+  }
 
   // get user
-  async getUser(req: Request, res: Response) {
+  public async getUser(req: Request, res: ConfigResponse<any>) {
     const id = req.params.id;
     try {
       // calling service layer
-      const result = await userServ.fetchUser(id);
-      return res.status(200).json({
-        status: "true",
-        message: "user fetched successfully",
-        user: result,
+      await userServ.fetchUser(id).then((val) => {
+        return res.status(200).json({
+          status: "true",
+          message: "user fetched successfully",
+          user: val,
+        });
       });
     } catch (error) {
       console.log(error);
@@ -28,33 +38,37 @@ export default class userController {
   }
 
   // adding new user
-  async newUser(req: Request, res: Response) {
+  public async newUser(req: Request, res: Response) {
     let { first_name, last_name, email, password }: User = req.body;
     try {
-      const result = await userServ.addUser({
-        first_name,
-        last_name,
-        email,
-        password,
-      });
-      console.log(result, "result for adding user");
-      return res.status(200).json({
-        status: "true",
-        message: "user added successfully",
-      });
+      await userServ
+        .addUser({
+          first_name,
+          last_name,
+          email,
+          password,
+        })
+        .then((val) => {
+          return res.status(200).json({
+            status: "true",
+            message: "user added successfully",
+            user_id: val.insertId,
+          });
+        });
     } catch (error) {
-      console.log(error);
       return res.status(500).json({ message: error });
     }
   }
   // updating user
-  async updateUser(req: Request, res: Response) {
+  public async updateUser(req: Request, res: Response) {
     const id = req.params.id;
     try {
-      const result = await userServ.updateUser(req.body, id);
-      res.status(200).json({
-        status: "true",
-        message: "user updation successfull",
+      await userServ.updateUser(req.body, id).then((val) => {
+        res.status(200).json({
+          status: "true",
+          message: "user updation successfull",
+          value: val.affectedRows,
+        });
       });
     } catch (error) {
       console.log(error);
@@ -63,13 +77,15 @@ export default class userController {
   }
 
   // deleting user
-  async deleteUser(req: Request, res: Response) {
+  public async deleteUser(req: Request, res: Response) {
     const id = req.params.id;
     try {
-      const result = await userServ.removeUser(id);
-      res.status(200).json({
-        status: "true",
-        message: "User Deleted Successfully",
+      await userServ.removeUser(id).then((val) => {
+        res.status(200).json({
+          status: "true",
+          message: "User Deleted Successfully",
+          value: val.affectedRows,
+        });
       });
     } catch (error) {
       console.log(error);
@@ -78,69 +94,92 @@ export default class userController {
   }
 
   // get report
-  async getReport(req: Request, res: Response) {
+  public async getReport(req: Request, res: Response) {
+    const id = req.params.id;
+
+    try {
+      const result = await userServ.userReport(id);
+
+      //  creation of excel sheet
+      const workbook = new Excel.Workbook();
+      const worksheet = workbook.addWorksheet("employee report");
+
+      const reportColumns = [
+        { key: "employee_id", header: "Employee Id" },
+        { key: "user_name", header: "Employee Name" },
+        { key: "role_", header: "Role" },
+        { key: "address", header: "Address" },
+        { key: "amount", header: "Salary" },
+        { key: "payment_date", header: "Pay Date" },
+      ];
+      worksheet.columns = reportColumns;
+
+      result.forEach((item: any) => {
+        worksheet.addRow(item);
+      });
+
+      const filepath = path.format({
+        dir: "./src/reports",
+        base: `${result[0].user_name}'s report.xlsx`,
+      });
+
+      await workbook.xlsx.writeFile(filepath);
+
+      return res.status(200).download(filepath, (err) => {
+        console.log(err);
+        console.log("file not downloaded");
+      });
+    } catch (error) {
+      console.log(error, "error while fetching report");
+    }
+  }
+
+  // get report base64
+
+  public async getBase64(req: Request, res: Response) {
     const id = req.params.id;
     try {
-      db.query(
-        `SELECT 
-    CONCAT(users.first_name, " ", users.last_name) AS user_name,
-    employee_info.employee_id,
-    employee_info.role_,
-    address.address,
-    employee_info.employee_id ,
-	   transactions.amount,
-    transactions.payment_date
-FROM 
-    users
-INNER JOIN 
-    address ON users.user_id = address.user_id
-INNER JOIN 
-    employee_info ON users.user_id = employee_info.user_id
-INNER JOIN 
-    transactions ON employee_info.employee_id = transactions.employee_id
-WHERE 
-users.user_id = ${id}
-;
-`,
-        async (err, result: any) => {
-          if (err) throw new Error("Error occurred while deleting user");
-          else {
-            //  creation of excel sheet
-            const workbook = new Excel.Workbook();
-            const worksheet = workbook.addWorksheet("employee report");
+      const result = await userServ.userReport(id);
 
-            const reportColumns = [
-              { key: "employee_id", header: "Employee Id" },
-              { key: "user_name", header: "Employee Name" },
-              { key: "role_", header: "Role" },
-              { key: "address", header: "Address" },
-              { key: "amount", header: "Salary" },
-              { key: "payment_date", header: "Pay Date" },
-            ];
-            worksheet.columns = reportColumns;
+      //  creation of excel sheet
+      const workbook = new Excel.Workbook();
+      const worksheet = workbook.addWorksheet("employee report");
 
-            result.forEach((item: any) => {
-              worksheet.addRow(item);
-            });
+      const reportColumns = [
+        { key: "employee_id", header: "Employee Id" },
+        { key: "user_name", header: "Employee Name" },
+        { key: "role_", header: "Role" },
+        { key: "address", header: "Address" },
+        { key: "amount", header: "Salary" },
+        { key: "payment_date", header: "Pay Date" },
+      ];
+      worksheet.columns = reportColumns;
 
-            const filepath = path.format({
-              dir: "./src/reports",
-              base: `${result[0].user_name}'s report.xlsx`,
-            });
+      result.forEach((item: any) => {
+        worksheet.addRow(item);
+      });
 
-            await workbook.xlsx.writeFile(filepath);
-
-            return res.status(200).json({
-              message: "Report fetched successfully",
-              file: filepath,
-              result,
-            });
-          }
+      const filepath = path.format({
+        dir: "./src/reports",
+        base: `${result[0].user_name}'s report.xlsx`,
+      });
+      await workbook.xlsx.writeFile(filepath);
+      fs.readFile(filepath, (err, data) => {
+        if (err) {
+          return res.status(500).json({ message: "unable to fetch report" });
         }
-      );
+        const encoded = Base64.encode(data.toString());
+        return res.status(200).json({
+          File: encoded,
+          message: "Report fetched successfully",
+        });
+      });
     } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: error });
+      console.log(error, "error while fetching report");
     }
   }
 }
+
+const userInstance = userController.getInstance();
+
+export default userInstance;

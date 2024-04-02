@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const db_connection_1 = require("../db_connection");
+const db_connection_1 = require("../config/db_connection");
+const utils_1 = require("../utils");
 class userService {
     constructor() { }
     static getInstance() {
@@ -20,25 +21,43 @@ class userService {
     }
     fetchUser(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = `SELECT * FROM users WHERE user_id=${id}`;
-            return yield (0, db_connection_1.query)({ sql });
+            return yield new Promise((resolve, reject) => {
+                db_connection_1.db.query(`SELECT * FROM users WHERE user_id=${id}`, (err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
         });
     }
     addUser(_a) {
         return __awaiter(this, arguments, void 0, function* ({ first_name, last_name, email, password, }) {
-            const sql = `INSERT INTO users (first_name,last_name,email,password_) VALUES ('${first_name}','${last_name}','${email}','${password}')`;
-            return yield (0, db_connection_1.query)({ sql });
+            password = (0, utils_1.Encrypter)(password, 10);
+            return yield new Promise((resolve, reject) => {
+                db_connection_1.db.query(`INSERT INTO users (first_name,last_name,email,password_) VALUES ('${first_name}','${last_name}','${email}','${password}')`, (err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
         });
     }
     removeUser(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = `DELETE FROM users WHERE user_id=${id}`;
-            return yield (0, db_connection_1.query)({ sql });
+            return yield new Promise((resolve, reject) => {
+                db_connection_1.db.query(`DELETE FROM users WHERE user_id=${id}`, (err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
         });
     }
     updateUser(_a, id_1) {
         return __awaiter(this, arguments, void 0, function* ({ first_name, last_name, email, password }, id) {
-            console.log("update triggered");
             let sql = `UPDATE users SET`;
             if (first_name) {
                 sql += ` first_name = '${first_name}',`;
@@ -50,11 +69,50 @@ class userService {
                 sql += ` email = '${email}',`;
             }
             if (password) {
+                password = (0, utils_1.Encrypter)(password, 10);
                 sql += ` password_ = '${password}',`;
             }
             sql = sql.slice(0, -1);
             sql += ` WHERE user_id = ${id}`;
-            return yield (0, db_connection_1.query)({ sql });
+            return yield new Promise((resolve, reject) => {
+                db_connection_1.db.query(sql, (err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
+        });
+    }
+    userReport(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield new Promise((resolve, reject) => {
+                db_connection_1.db.query(`SELECT 
+    CONCAT(users.first_name, " ", users.last_name) AS user_name,
+    employee_info.employee_id,
+    employee_info.role_,
+    address.address,
+    employee_info.employee_id ,
+	   transactions.amount,
+    transactions.payment_date
+FROM 
+    users
+INNER JOIN 
+    address ON users.user_id = address.user_id
+INNER JOIN 
+    employee_info ON users.user_id = employee_info.user_id
+INNER JOIN 
+    transactions ON employee_info.employee_id = transactions.employee_id
+WHERE 
+users.user_id = ${id}
+;
+`, (err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
         });
     }
 }

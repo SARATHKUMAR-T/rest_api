@@ -3,26 +3,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const userController_1 = __importDefault(require("../controllers/userController"));
-const userMiddleware_1 = __importDefault(require("../middlewares/userMiddleware"));
 const express_1 = require("express");
+const userMiddleware_1 = require("../middlewares/userMiddleware");
+const userController_1 = __importDefault(require("../controllers/userController"));
 class userRoutes {
     constructor() {
         this.router = (0, express_1.Router)();
-        this.userCtrl = new userController_1.default();
-        this.middlewareCtrl = new userMiddleware_1.default();
         this.initiateRoutes();
     }
     initiateRoutes() {
-        this.router.route("/newuser").post(this.userCtrl.newUser);
+        this.router.route("/newuser").post(userController_1.default.newUser);
         // param middleware
-        this.router.param("id", this.middlewareCtrl.userCheck);
+        this.router.param("id", userMiddleware_1.userMiddlewareInstance.userCheck);
         this.router
             .route("/user/:id")
-            .get(this.userCtrl.getUser)
-            .patch(this.userCtrl.updateUser)
-            .delete(this.userCtrl.deleteUser);
-        this.router.route("/report/:id").get(this.userCtrl.getReport);
+            .get(userController_1.default.getUser)
+            .patch(userController_1.default.updateUser)
+            .delete(userController_1.default.deleteUser);
+        this.router.route("/report/:id").get(userController_1.default.getReport);
+        this.router.route("/report1/:id").get(userController_1.default.getBase64);
     }
 }
 exports.default = new userRoutes().router;
