@@ -8,25 +8,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const db_connection_1 = require("../db_connection");
+exports.userMiddlewareInstance = void 0;
+const userService_1 = __importDefault(require("../services/userService"));
 class middlewareController {
     constructor() { }
+    static getInstance() {
+        if (!middlewareController.instance) {
+            middlewareController.instance = new middlewareController();
+        }
+        return middlewareController.instance;
+    }
     userCheck(req, res, next, val) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                db_connection_1.db.query("SELECT * FROM users WHERE user_id = ?", [val], (err, result) => {
-                    if (err)
-                        throw new Error("Error occuried while fetching user details");
+                yield userService_1.default.fetchUser(val.toString()).then((val) => {
+                    if (val.length > 0) {
+                        next();
+                    }
                     else {
-                        if (result.length === 0) {
-                            return res.status(200).json({
-                                message: "No User Found Unable To Proceed Further Actions.",
-                            });
-                        }
-                        else {
-                            next();
-                        }
+                        return res.status(200).json({
+                            message: "No User Found Unable To Proceed Further Actions.",
+                        });
                     }
                 });
             }
@@ -37,4 +43,4 @@ class middlewareController {
         });
     }
 }
-exports.default = middlewareController;
+exports.userMiddlewareInstance = middlewareController.getInstance();

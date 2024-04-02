@@ -6,7 +6,6 @@ export default class Routes {
   erroHandler = new errorHandler();
   constructor(app: Application) {
     // user routes
-
     app.use("", userRouter);
     app.all("*", (req, res, next) => {
       const err: any = new Error(

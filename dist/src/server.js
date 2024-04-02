@@ -7,7 +7,7 @@ const cors_1 = __importDefault(require("cors"));
 require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
-const db_connection_1 = require("./db_connection");
+const db_connection_1 = require("./config/db_connection");
 const routes_1 = __importDefault(require("./routes"));
 class Server {
     constructor() {

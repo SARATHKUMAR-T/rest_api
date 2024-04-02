@@ -1,36 +1,39 @@
 import { NextFunction, Request, Response } from "express";
-import { db } from "../db_connection";
-import { RowDataPacket } from "mysql2";
+import userServ from "../services/userService";
 
-export default class middlewareController {
-  constructor() {}
-  async userCheck(
+class middlewareController {
+  private static instance: middlewareController;
+
+  private constructor() {}
+
+  public static getInstance(): middlewareController {
+    if (!middlewareController.instance) {
+      middlewareController.instance = new middlewareController();
+    }
+    return middlewareController.instance;
+  }
+
+  public async userCheck(
     req: Request,
     res: Response,
     next: NextFunction,
     val: String
   ) {
     try {
-      db.query(
-        "SELECT * FROM users WHERE user_id = ?",
-        [val],
-        (err, result: RowDataPacket[]): Response | void => {
-          if (err)
-            throw new Error("Error occuried while fetching user details");
-          else {
-            if (result.length === 0) {
-              return res.status(200).json({
-                message: "No User Found Unable To Proceed Further Actions.",
-              });
-            } else {
-              next();
-            }
-          }
+      await userServ.fetchUser(val.toString()).then((val) => {
+        if (val.length > 0) {
+          next();
+        } else {
+          return res.status(200).json({
+            message: "No User Found Unable To Proceed Further Actions.",
+          });
         }
-      );
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({ message: error });
     }
   }
 }
+
+export const userMiddlewareInstance = middlewareController.getInstance();
