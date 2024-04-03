@@ -9,17 +9,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.erroHandle = void 0;
 class errorHandler {
     constructor() { }
     globalErrorHandler(err, req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             err.statusCode = err.statusCode || 500;
             err.status = err.status || "error";
-            res.status(err.statusCode).json({
-                status: err.status,
+            return res.status(err.statusCode).json({
+                status: err.stack,
                 message: err.message,
             });
         });
     }
 }
-exports.default = errorHandler;
+exports.erroHandle = new errorHandler();

@@ -40,6 +40,7 @@ const fs_1 = __importDefault(require("fs"));
 const js_base64_1 = require("js-base64");
 const path = __importStar(require("path"));
 const userService_1 = __importDefault(require("../services/userService"));
+const appError_1 = require("../errorHandler/appError");
 class userController {
     constructor() { }
     static getInstance() {
@@ -113,7 +114,7 @@ class userController {
         });
     }
     // deleting user
-    deleteUser(req, res) {
+    deleteUser(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const id = req.params.id;
             try {
@@ -126,8 +127,7 @@ class userController {
                 });
             }
             catch (error) {
-                console.log(error);
-                return res.status(500).json({ message: error });
+                next(new appError_1.AppError(error.message, 404));
             }
         });
     }
