@@ -1,11 +1,12 @@
 import Excel from "exceljs";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import fs from "fs";
 import { Base64 } from "js-base64";
 import * as path from "path";
 import userServ from "../services/userService";
 import { ConfigResponse } from "../types/Response";
 import { User } from "../types/User";
+import { AppError } from "../errorHandler/appError";
 
 class userController {
   private static instance: userController;
@@ -77,7 +78,7 @@ class userController {
   }
 
   // deleting user
-  public async deleteUser(req: Request, res: Response) {
+  public async deleteUser(req: Request, res: Response, next: NextFunction) {
     const id = req.params.id;
     try {
       await userServ.removeUser(id).then((val) => {
@@ -87,16 +88,14 @@ class userController {
           value: val.affectedRows,
         });
       });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: error });
+    } catch (error: Error | any) {
+      next(new AppError(error.message, 404));
     }
   }
 
   // get report
   public async getReport(req: Request, res: Response) {
     const id = req.params.id;
-
     try {
       const result = await userServ.userReport(id);
 

@@ -4,17 +4,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const userRoute_1 = __importDefault(require("./userRoute"));
-const errorHandler_1 = __importDefault(require("../errorHandler/errorHandler"));
+const appError_1 = require("../errorHandler/appError");
+const errorHandler_1 = require("../errorHandler/errorHandler");
 class Routes {
     constructor(app) {
-        this.erroHandler = new errorHandler_1.default();
         // user routes
         app.use("", userRoute_1.default);
         app.all("*", (req, res, next) => {
-            const err = new Error(`cannot find ${req.originalUrl} on this server`);
-            err.status = "fail";
-            err.statusCode = 404;
+            next(new appError_1.AppError(`cannot find ${req.originalUrl} on this server`, 404));
         });
+        app.use(errorHandler_1.erroHandle.globalErrorHandler);
     }
 }
 exports.default = Routes;

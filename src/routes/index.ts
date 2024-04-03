@@ -1,18 +1,16 @@
-import { Application, Request, Response } from "express";
+import { Application, NextFunction, Request, Response } from "express";
 import userRouter from "./userRoute";
-import errorHandler from "../errorHandler/errorHandler";
+import { AppError } from "../errorHandler/appError";
+import { erroHandle } from "../errorHandler/errorHandler";
 
 export default class Routes {
-  erroHandler = new errorHandler();
   constructor(app: Application) {
     // user routes
     app.use("", userRouter);
-    app.all("*", (req, res, next) => {
-      const err: any = new Error(
-        `cannot find ${req.originalUrl} on this server`
-      );
-      err.status = "fail";
-      err.statusCode = 404;
+    app.all("*", (req: Request, res: Response, next: NextFunction) => {
+      next(new AppError(`cannot find ${req.originalUrl} on this server`, 404));
     });
+
+    app.use(erroHandle.globalErrorHandler);
   }
 }
