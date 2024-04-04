@@ -39,8 +39,9 @@ const exceljs_1 = __importDefault(require("exceljs"));
 const fs_1 = __importDefault(require("fs"));
 const js_base64_1 = require("js-base64");
 const path = __importStar(require("path"));
-const userService_1 = __importDefault(require("../services/userService"));
 const appError_1 = require("../errorHandler/appError");
+const userService_1 = __importDefault(require("../services/userService"));
+const utils_1 = require("../utils");
 class userController {
     constructor() { }
     static getInstance() {
@@ -50,22 +51,20 @@ class userController {
         return userController.instance;
     }
     // get user
-    getUser(req, res) {
+    getUser(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const id = req.params.id;
             try {
-                // calling service layer
-                yield userService_1.default.fetchUser(id).then((val) => {
-                    return res.status(200).json({
-                        status: "true",
-                        message: "user fetched successfully",
-                        user: val,
-                    });
-                });
+                const id = req.params.id;
+                const a1 = yield userService_1.default.fetchUser(id, next);
+                const response = {
+                    isError: false,
+                    message: "user fetched successfully",
+                    data: a1,
+                };
+                return res.status(200).json(response);
             }
             catch (error) {
-                console.log(error);
-                return res.status(500).json({ message: error });
+                console.log(error, "from controller side");
             }
         });
     }
@@ -137,25 +136,20 @@ class userController {
             const id = req.params.id;
             try {
                 const result = yield userService_1.default.userReport(id);
-                //  creation of excel sheet
-                const workbook = new exceljs_1.default.Workbook();
-                const worksheet = workbook.addWorksheet("employee report");
-                const reportColumns = [
+                const workbook = (0, utils_1.generateExcelBook)("employee report", [
                     { key: "employee_id", header: "Employee Id" },
                     { key: "user_name", header: "Employee Name" },
                     { key: "role_", header: "Role" },
                     { key: "address", header: "Address" },
                     { key: "amount", header: "Salary" },
                     { key: "payment_date", header: "Pay Date" },
-                ];
-                worksheet.columns = reportColumns;
-                result.forEach((item) => {
-                    worksheet.addRow(item);
-                });
+                ], result);
                 const filepath = path.format({
                     dir: "./src/reports",
                     base: `${result[0].user_name}'s report.xlsx`,
                 });
+                // workbook.xlsx.write(res);
+                // const rs = res.status(200);
                 yield workbook.xlsx.writeFile(filepath);
                 return res.status(200).download(filepath, (err) => {
                     console.log(err);

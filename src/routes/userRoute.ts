@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { userMiddlewareInstance } from "../middlewares/userMiddleware";
+// import { userMiddlewareInstance } from "../middlewares/userMiddleware";
 import userInstance from "../controllers/userController";
 class userRoutes {
   router = Router();
@@ -9,7 +9,7 @@ class userRoutes {
   initiateRoutes() {
     this.router.route("/newuser").post(userInstance.newUser);
     // param middleware
-    this.router.param("id", userMiddlewareInstance.userCheck);
+    // this.router.param("id", userMiddlewareInstance.userCheck);
     this.router
       .route("/user/:id")
       .get(userInstance.getUser)

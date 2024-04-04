@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_connection_1 = require("../config/db_connection");
 const utils_1 = require("../utils");
+const appError_1 = require("../errorHandler/appError");
 class userService {
     constructor() { }
     static getInstance() {
@@ -19,16 +20,21 @@ class userService {
         }
         return userService.instance;
     }
-    fetchUser(id) {
+    fetchUser(id, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new Promise((resolve, reject) => {
-                db_connection_1.db.query(`SELECT * FROM users WHERE user_id=${id}`, (err, result) => {
-                    if (err)
-                        reject(err);
-                    else
+            try {
+                const a = yield new Promise((resolve, reject) => {
+                    db_connection_1.db.query(`SELECT * FROM users WHERE user_id=${id}`, (err, result) => {
+                        if (err)
+                            reject(err);
                         resolve(result);
+                    });
                 });
-            });
+                return a;
+            }
+            catch (error) {
+                next(new appError_1.AppError("Invalid Query", 500));
+            }
         });
     }
     addUser(_a) {
