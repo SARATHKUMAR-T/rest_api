@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const userMiddleware_1 = require("../middlewares/userMiddleware");
+// import { userMiddlewareInstance } from "../middlewares/userMiddleware";
 const userController_1 = __importDefault(require("../controllers/userController"));
 class userRoutes {
     constructor() {
@@ -14,7 +14,7 @@ class userRoutes {
     initiateRoutes() {
         this.router.route("/newuser").post(userController_1.default.newUser);
         // param middleware
-        this.router.param("id", userMiddleware_1.userMiddlewareInstance.userCheck);
+        // this.router.param("id", userMiddlewareInstance.userCheck);
         this.router
             .route("/user/:id")
             .get(userController_1.default.getUser)

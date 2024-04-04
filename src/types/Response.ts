@@ -1,6 +1,6 @@
-import { Response } from "express";
-import { Send } from "express-serve-static-core";
-
-export interface ConfigResponse<ResBody> extends Response {
-  json: Send<ResBody, this>;
+// Define a generic interface for API response
+export interface ApiResponse<T> {
+  isError: boolean;
+  message?: string;
+  data?: T;
 }

@@ -2,6 +2,9 @@ import { QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
 import { db } from "../config/db_connection";
 import { User } from "../types/User";
 import { Encrypter } from "../utils";
+import { ApiResponse } from "../types/Response";
+import { NextFunction, Response } from "express";
+import { AppError } from "../errorHandler/appError";
 
 class userService {
   private static instance: userService;
@@ -15,16 +18,21 @@ class userService {
     return userService.instance;
   }
 
-  public async fetchUser(id: string): Promise<RowDataPacket[]> {
-    return await new Promise((resolve, reject) => {
-      db.query(
-        `SELECT * FROM users WHERE user_id=${id}`,
-        (err: QueryError | null, result: RowDataPacket[]) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
-      );
-    });
+  public async fetchUser(id: string, next: NextFunction) {
+    try {
+      const a: RowDataPacket[] = await new Promise((resolve, reject) => {
+        db.query(
+          `SELECT * FROM users WHERE user_id=${id}`,
+          (err: QueryError, result: RowDataPacket[]) => {
+            if (err) reject(err);
+            resolve(result);
+          }
+        );
+      });
+      return a;
+    } catch (error) {
+      next(new AppError("Invalid Query", 500));
+    }
   }
 
   public async addUser({
