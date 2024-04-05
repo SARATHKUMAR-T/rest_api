@@ -4,10 +4,7 @@ exports.erroHandle = void 0;
 class errorHandler {
     constructor() { }
     async globalErrorHandler(err, req, res, next) {
-        err.statusCode = err.statusCode || 500;
-        err.status = err.status || "error";
-        return res.status(err.statusCode).json({
-            status: err.status,
+        return res.status(500).json({
             message: err.message,
         });
     }

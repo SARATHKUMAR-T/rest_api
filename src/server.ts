@@ -2,7 +2,6 @@ import cors from "cors";
 import "dotenv/config";
 import express, { Application } from "express";
 import morgan from "morgan";
-import { db } from "./config/db_connection";
 import Routes from "./routes";
 
 class Server {
@@ -51,29 +50,6 @@ class Server {
   //   starting the server
   private start() {
     // db connection
-    db.connect((err) => {
-      if (err) {
-        console.log("error while connecting db");
-        console.log(err);
-      }
-
-      // creating db
-      db.query("CREATE DATABASE IF NOT EXISTS usersDB", (err) => {
-        if (err) console.log(err, "error while creating db");
-      });
-
-      // creating user table
-      db.query("USE task1", (err): void => {
-        if (err) console.log(err, "error while selecting db");
-
-        db.query(
-          "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), email VARCHAR(255) UNIQUE,password VARCHAR(255))",
-          (err): void => {
-            if (err) console.log(err, "unable to create table");
-          }
-        );
-      });
-    });
 
     this.app
       .listen(this.PORT, (): void => {

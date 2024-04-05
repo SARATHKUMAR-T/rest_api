@@ -1,14 +1,18 @@
 import { Application, NextFunction, Request, Response } from "express";
-import userRouter from "./userRoute";
-import { AppError } from "../errorHandler/appError";
-import { erroHandle } from "../errorHandler/errorHandler";
+import { erroHandle } from "../middlewares/errorHandlerMiddleware";
+import { userRouter } from "./userRoute";
+import { addressRouter } from "./addressRoute";
+import { transactionRouter } from "./transactionRoute";
+import { employeeInfoRouter } from "./employeeInfoRoute";
 
 export default class Routes {
   constructor(app: Application) {
-    // user routes
-    app.use("", userRouter);
+    app.use("", userRouter.router);
+    app.use("", addressRouter.router);
+    app.use("", transactionRouter.router);
+    app.use("", employeeInfoRouter.router);
     app.all("*", (req: Request, res: Response, next: NextFunction) => {
-      next(new AppError(`cannot find ${req.originalUrl} on this server`, 404));
+      next(new Error("cannot found this route"));
     });
 
     app.use(erroHandle.globalErrorHandler);
