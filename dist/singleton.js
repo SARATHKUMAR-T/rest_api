@@ -1,5 +1,6 @@
 "use strict";
 class Singleton {
+    static instance;
     constructor() {
         // Private constructor to prevent direct instantiation
     }

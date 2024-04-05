@@ -7,12 +7,12 @@ const cors_1 = __importDefault(require("cors"));
 require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
-const db_connection_1 = require("./config/db_connection");
 const routes_1 = __importDefault(require("./routes"));
 class Server {
+    static instance;
+    app = (0, express_1.default)();
+    PORT = process.env.PORT ? parseInt(process.env.PORT) : 8000;
     constructor() {
-        this.app = (0, express_1.default)();
-        this.PORT = process.env.PORT ? parseInt(process.env.PORT) : 8000;
         this.config();
         this.setUpRoutes();
         this.start();
@@ -46,26 +46,6 @@ class Server {
     //   starting the server
     start() {
         // db connection
-        db_connection_1.db.connect((err) => {
-            if (err) {
-                console.log("error while connecting db");
-                console.log(err);
-            }
-            // creating db
-            db_connection_1.db.query("CREATE DATABASE IF NOT EXISTS usersDB", (err) => {
-                if (err)
-                    console.log(err, "error while creating db");
-            });
-            // creating user table
-            db_connection_1.db.query("USE task1", (err) => {
-                if (err)
-                    console.log(err, "error while selecting db");
-                db_connection_1.db.query("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), email VARCHAR(255) UNIQUE,password VARCHAR(255))", (err) => {
-                    if (err)
-                        console.log(err, "unable to create table");
-                });
-            });
-        });
         this.app
             .listen(this.PORT, () => {
             console.log(`Server is listening on ${this.PORT}`);

@@ -1,10 +1,18 @@
 import { Router } from "express";
+import { userInstance } from "../controllers";
 // import { userMiddlewareInstance } from "../middlewares/userMiddleware";
-import userInstance from "../controllers/userController";
-class userRoutes {
+class userRoute {
+  private static instance: userRoute;
   router = Router();
-  constructor() {
+  private constructor() {
     this.initiateRoutes();
+  }
+
+  public static getInstance(): userRoute {
+    if (!userRoute.instance) {
+      userRoute.instance = new userRoute();
+    }
+    return userRoute.instance;
   }
   initiateRoutes() {
     this.router.route("/newuser").post(userInstance.newUser);
@@ -15,9 +23,11 @@ class userRoutes {
       .get(userInstance.getUser)
       .patch(userInstance.updateUser)
       .delete(userInstance.deleteUser);
+
+    this.router.route("/employee/:id").patch(userInstance.addEmployee);
     this.router.route("/report/:id").get(userInstance.getReport);
-    this.router.route("/report1/:id").get(userInstance.getBase64);
+    // this.router.route("/report1/:id").get(userInstance.getBase64);
   }
 }
 
-export default new userRoutes().router;
+export const userRouter = userRoute.getInstance();

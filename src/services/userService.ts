@@ -1,10 +1,11 @@
-import { QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
+import { ReasonPhrases, StatusCodes } from "http-status-codes";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
+import path from "path";
 import { db } from "../config/db_connection";
-import { User } from "../types/User";
-import { Encrypter } from "../utils";
-import { ApiResponse } from "../types/Response";
-import { NextFunction, Response } from "express";
-import { AppError } from "../errorHandler/appError";
+import { APIresponse } from "../types";
+import { EmployeeInfo } from "../types/employee_info";
+import { User } from "../types/user";
+import { Encrypter, generateExcelBook } from "../utils";
 
 class userService {
   private static instance: userService;
@@ -18,85 +19,104 @@ class userService {
     return userService.instance;
   }
 
-  public async fetchUser(id: string, next: NextFunction) {
+  public async fetchUser(id: string) {
     try {
-      const a: RowDataPacket[] = await new Promise((resolve, reject) => {
-        db.query(
-          `SELECT * FROM users WHERE user_id=${id}`,
-          (err: QueryError, result: RowDataPacket[]) => {
-            if (err) reject(err);
-            resolve(result);
-          }
+      const [result] = await db.query<RowDataPacket[]>(
+        `SELECT * FROM users WHERE user_id=${id} AND active=1`
+      );
+      if (result.length === 0) {
+        return new APIresponse<null>(
+          true,
+          StatusCodes.NOT_FOUND,
+          "No user Found"
         );
-      });
-      return a;
-    } catch (error) {
-      next(new AppError("Invalid Query", 500));
+      }
+      return new APIresponse<RowDataPacket[]>(
+        false,
+        StatusCodes.OK,
+        ReasonPhrases.OK,
+        result
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
     }
   }
 
-  public async addUser({
-    first_name,
-    last_name,
-    email,
-    password,
-  }: User): Promise<ResultSetHeader> {
-    password = Encrypter(password, 10);
-    return await new Promise((resolve, reject) => {
-      db.query(
-        `INSERT INTO users (first_name,last_name,email,password_) VALUES ('${first_name}','${last_name}','${email}','${password}')`,
-        (err: QueryError | null, result: ResultSetHeader) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
+  public async addUser(user: User) {
+    try {
+      user.password = Encrypter(user.password, 10);
+      const [result] = await db.query<ResultSetHeader>(
+        `INSERT INTO users (first_name,last_name,email,password_) VALUES ('${user.first_name}','${user.last_name}','${user.email}','${user.password}')`
       );
-    });
+      return new APIresponse<number>(
+        false,
+        StatusCodes.OK,
+        "user added successfully",
+        result.insertId
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
   }
 
-  public async removeUser(id: string): Promise<ResultSetHeader> {
-    return await new Promise((resolve, reject) => {
-      db.query(
-        `DELETE FROM users WHERE user_id=${id}`,
-        (err: QueryError | null, result: ResultSetHeader) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
+  public async removeUser(id: string) {
+    try {
+      const [result] = await db.query<ResultSetHeader>(
+        `UPDATE users SET active=0 WHERE user_id=${id}`
       );
-    });
+      return new APIresponse<null>(false, StatusCodes.OK, ReasonPhrases.OK);
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
   }
 
   public async updateUser(
     { first_name, last_name, email, password }: User,
     id: string
-  ): Promise<ResultSetHeader> {
-    let sql = `UPDATE users SET`;
-    if (first_name) {
-      sql += ` first_name = '${first_name}',`;
+  ) {
+    try {
+      let sql = `UPDATE users SET`;
+      if (first_name) {
+        sql += ` first_name = '${first_name}',`;
+      }
+      if (last_name) {
+        sql += ` last_name = '${last_name}',`;
+      }
+      if (email) {
+        sql += ` email = '${email}',`;
+      }
+      if (password) {
+        password = Encrypter(password, 10);
+        sql += ` password_ = '${password}',`;
+      }
+      sql = sql.slice(0, -1);
+      sql += ` WHERE user_id = ${id}`;
+      const [result] = await db.query<ResultSetHeader>(sql);
+      return new APIresponse<null>(false, StatusCodes.OK, ReasonPhrases.OK);
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
     }
-    if (last_name) {
-      sql += ` last_name = '${last_name}',`;
-    }
-    if (email) {
-      sql += ` email = '${email}',`;
-    }
-    if (password) {
-      password = Encrypter(password, 10);
-      sql += ` password_ = '${password}',`;
-    }
-    sql = sql.slice(0, -1);
-    sql += ` WHERE user_id = ${id}`;
-    return await new Promise((resolve, reject) => {
-      db.query(sql, (err: QueryError | null, result: ResultSetHeader) => {
-        if (err) reject(err);
-        else resolve(result);
-      });
-    });
   }
 
-  public async userReport(id: string): Promise<RowDataPacket[]> {
-    return await new Promise((resolve, reject) => {
-      db.query(
-        `SELECT 
+  public async userReport(id: string) {
+    try {
+      const [result] = await db.query<RowDataPacket[]>(`SELECT 
     CONCAT(users.first_name, " ", users.last_name) AS user_name,
     employee_info.employee_id,
     employee_info.role_,
@@ -115,13 +135,40 @@ INNER JOIN
 WHERE 
 users.user_id = ${id}
 ;
-`,
-        (err: QueryError | null, result: RowDataPacket[]) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
+`);
+      const workbook = generateExcelBook(
+        "employee report",
+        [
+          { key: "employee_id", header: "Employee Id" },
+          { key: "user_name", header: "Employee Name" },
+          { key: "role_", header: "Role" },
+          { key: "address", header: "Address" },
+          { key: "amount", header: "Salary" },
+          { key: "payment_date", header: "Pay Date" },
+        ],
+        result
       );
-    });
+
+      const filepath = path.format({
+        dir: "./src/reports",
+        base: `${result[0].user_name}'s report.xlsx`,
+      });
+
+      await workbook.xlsx.writeFile(filepath);
+
+      return new APIresponse<string>(
+        false,
+        StatusCodes.OK,
+        ReasonPhrases.OK,
+        filepath
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
   }
 }
 
