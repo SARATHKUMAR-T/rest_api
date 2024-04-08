@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import userServ from "../services/userService";
+import { upload } from "../utils";
+import { StatusCodes } from "http-status-codes";
 
 class userController {
   private static instance: userController;
@@ -58,6 +60,25 @@ class userController {
     }
   }
 
+  public async reportMailer(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await userServ.reportMail(req.params.id, req.body.mailTo);
+      return res.status(result.status).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+  public async fileUploader(req: Request, res: Response, next: NextFunction) {
+    try {
+      console.log("req received");
+      res.status(StatusCodes.OK).json({
+        message: "file uploaded successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // public async getBase64(req: Request, res: Response, next: NextFunction) {
   //   const id = req.params.id;
   //   try {
@@ -101,16 +122,6 @@ class userController {
   //     next(new AppError(error.message, 404));
   //   }
   // }
-
-  public async addEmployee(req: Request, res: Response, next: NextFunction) {
-    try {
-      // const result = await userServ.addEmployeeInfo(req.params.id, req.body);
-      // if (result.data) return res.status(result.status).download(result.data);
-      // return res.status(result.status).json(result);
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 
 export const userInstance = userController.getInstance();

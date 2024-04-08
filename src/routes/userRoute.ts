@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { userInstance } from "../controllers";
-// import { userMiddlewareInstance } from "../middlewares/userMiddleware";
+import { userMiddlewareInstance } from "../middlewares/userMiddleware";
+import { upload } from "../utils";
 class userRoute {
   private static instance: userRoute;
   router = Router();
@@ -16,17 +17,17 @@ class userRoute {
   }
   initiateRoutes() {
     this.router.route("/newuser").post(userInstance.newUser);
-    // param middleware
-    // this.router.param("id", userMiddlewareInstance.userCheck);
     this.router
       .route("/user/:id")
       .get(userInstance.getUser)
-      .patch(userInstance.updateUser)
+      .patch(userMiddlewareInstance.authMiddleware, userInstance.updateUser)
       .delete(userInstance.deleteUser);
 
-    this.router.route("/employee/:id").patch(userInstance.addEmployee);
     this.router.route("/report/:id").get(userInstance.getReport);
-    // this.router.route("/report1/:id").get(userInstance.getBase64);
+    this.router.route("/reportmailer/:id").get(userInstance.reportMailer);
+    this.router
+      .route("/fileuploader/:id")
+      .post(upload.single("file"), userInstance.fileUploader);
   }
 }
 

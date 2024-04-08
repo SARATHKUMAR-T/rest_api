@@ -8,6 +8,7 @@ const path_1 = __importDefault(require("path"));
 const db_connection_1 = require("../config/db_connection");
 const types_1 = require("../types");
 const utils_1 = require("../utils");
+require("dotenv/config");
 class userService {
     static instance;
     constructor() { }
@@ -23,7 +24,8 @@ class userService {
             if (result.length === 0) {
                 return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.NOT_FOUND, "No user Found");
             }
-            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, result);
+            const token = (0, utils_1.tokenGenerator)({ id: result[0].user_id }, process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd");
+            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, result, token);
         }
         catch (error) {
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
@@ -33,7 +35,8 @@ class userService {
         try {
             user.password = (0, utils_1.Encrypter)(user.password, 10);
             const [result] = await db_connection_1.db.query(`INSERT INTO users (first_name,last_name,email,password_) VALUES ('${user.first_name}','${user.last_name}','${user.email}','${user.password}')`);
-            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "user added successfully", result.insertId);
+            const token = (0, utils_1.tokenGenerator)({ id: result.insertId }, process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd");
+            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "user added successfully", token);
         }
         catch (error) {
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
@@ -109,6 +112,58 @@ users.user_id = ${id}
             });
             await workbook.xlsx.writeFile(filepath);
             return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, filepath);
+        }
+        catch (error) {
+            return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+        }
+    }
+    async reportMail(id, mailTo) {
+        try {
+            const [result] = await db_connection_1.db.query(`SELECT 
+    CONCAT(users.first_name, " ", users.last_name) AS user_name,
+    employee_info.employee_id,
+    employee_info.role_,
+    address.address,
+    employee_info.employee_id ,
+	   transactions.amount,
+    transactions.payment_date
+FROM 
+    users
+INNER JOIN 
+    address ON users.user_id = address.user_id
+INNER JOIN 
+    employee_info ON users.user_id = employee_info.user_id
+INNER JOIN 
+    transactions ON employee_info.employee_id = transactions.employee_id
+WHERE 
+users.user_id = ${id}
+;
+`);
+            const workbook = (0, utils_1.generateExcelBook)("employee report", [
+                { key: "employee_id", header: "Employee Id" },
+                { key: "user_name", header: "Employee Name" },
+                { key: "role_", header: "Role" },
+                { key: "address", header: "Address" },
+                { key: "amount", header: "Salary" },
+                { key: "payment_date", header: "Pay Date" },
+            ], result);
+            const filepath = path_1.default.format({
+                dir: "./src/reports",
+                base: `${result[0].user_name}'s report.xlsx`,
+            });
+            await workbook.xlsx.writeFile(filepath);
+            console.log(filepath);
+            (0, utils_1.mailerGenerator)("spellbee931@gmail.com", "iyodaocmlnjdrhkj", {
+                from: "spellbee931@gmail.com",
+                to: mailTo,
+                subject: `${result[0].user_name}-Report`,
+                attachments: [
+                    {
+                        path: "./src/reports/saravanan S FORD's report.xlsx",
+                    },
+                ],
+            });
+            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "email send successfully");
         }
         catch (error) {
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);

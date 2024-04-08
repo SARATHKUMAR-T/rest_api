@@ -3,9 +3,14 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 import path from "path";
 import { db } from "../config/db_connection";
 import { APIresponse } from "../types";
-import { EmployeeInfo } from "../types/employee_info";
 import { User } from "../types/user";
-import { Encrypter, generateExcelBook } from "../utils";
+import {
+  Encrypter,
+  generateExcelBook,
+  mailerGenerator,
+  tokenGenerator,
+} from "../utils";
+import "dotenv/config";
 
 class userService {
   private static instance: userService;
@@ -31,11 +36,17 @@ class userService {
           "No user Found"
         );
       }
+      const token = tokenGenerator(
+        { id: result[0].user_id },
+        process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd"
+      );
+
       return new APIresponse<RowDataPacket[]>(
         false,
         StatusCodes.OK,
         ReasonPhrases.OK,
-        result
+        result,
+        token
       );
     } catch (error: Error | any) {
       return new APIresponse<null>(
@@ -52,11 +63,16 @@ class userService {
       const [result] = await db.query<ResultSetHeader>(
         `INSERT INTO users (first_name,last_name,email,password_) VALUES ('${user.first_name}','${user.last_name}','${user.email}','${user.password}')`
       );
-      return new APIresponse<number>(
+
+      const token = tokenGenerator(
+        { id: result.insertId },
+        process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd"
+      );
+      return new APIresponse<string>(
         false,
         StatusCodes.OK,
         "user added successfully",
-        result.insertId
+        token
       );
     } catch (error: Error | any) {
       return new APIresponse<null>(
@@ -161,6 +177,73 @@ users.user_id = ${id}
         StatusCodes.OK,
         ReasonPhrases.OK,
         filepath
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
+  public async reportMail(id: string, mailTo: string) {
+    try {
+      const [result] = await db.query<RowDataPacket[]>(`SELECT 
+    CONCAT(users.first_name, " ", users.last_name) AS user_name,
+    employee_info.employee_id,
+    employee_info.role_,
+    address.address,
+    employee_info.employee_id ,
+	   transactions.amount,
+    transactions.payment_date
+FROM 
+    users
+INNER JOIN 
+    address ON users.user_id = address.user_id
+INNER JOIN 
+    employee_info ON users.user_id = employee_info.user_id
+INNER JOIN 
+    transactions ON employee_info.employee_id = transactions.employee_id
+WHERE 
+users.user_id = ${id}
+;
+`);
+      const workbook = generateExcelBook(
+        "employee report",
+        [
+          { key: "employee_id", header: "Employee Id" },
+          { key: "user_name", header: "Employee Name" },
+          { key: "role_", header: "Role" },
+          { key: "address", header: "Address" },
+          { key: "amount", header: "Salary" },
+          { key: "payment_date", header: "Pay Date" },
+        ],
+        result
+      );
+
+      const filepath = path.format({
+        dir: "./src/reports",
+        base: `${result[0].user_name}'s report.xlsx`,
+      });
+
+      await workbook.xlsx.writeFile(filepath);
+      console.log(filepath);
+
+      mailerGenerator("spellbee931@gmail.com", "iyodaocmlnjdrhkj", {
+        from: "spellbee931@gmail.com",
+        to: mailTo,
+        subject: `${result[0].user_name}-Report`,
+        attachments: [
+          {
+            path: "./src/reports/saravanan S FORD's report.xlsx",
+          },
+        ],
+      });
+
+      return new APIresponse<null>(
+        false,
+        StatusCodes.OK,
+        "email send successfully"
       );
     } catch (error: Error | any) {
       return new APIresponse<null>(
