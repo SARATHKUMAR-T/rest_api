@@ -12,7 +12,7 @@ const multer_1 = __importDefault(require("multer"));
 // ) => {
 //   if (
 //     file.mimetype.includes("excel") ||
-//     file.mimetype.includes("spreadsheetml")
+//     file.mimetype.includes("")
 //   ) {
 //     cb(null, true);
 //   } else {
@@ -25,7 +25,7 @@ const storage = multer_1.default.diskStorage({
     },
     filename: function (req, file, cb) {
         console.log(file);
-        cb(null, Date.now() + "-" + file.originalname);
+        cb(null, file.originalname);
     },
 });
 exports.upload = (0, multer_1.default)({ storage: storage });

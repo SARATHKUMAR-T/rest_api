@@ -3,20 +3,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.userService = void 0;
 const http_status_codes_1 = require("http-status-codes");
 const path_1 = __importDefault(require("path"));
 const db_connection_1 = require("../config/db_connection");
 const types_1 = require("../types");
+const exceljs_1 = __importDefault(require("exceljs"));
 const utils_1 = require("../utils");
 require("dotenv/config");
-class userService {
+class UserService {
     static instance;
     constructor() { }
     static getInstance() {
-        if (!userService.instance) {
-            userService.instance = new userService();
+        if (!UserService.instance) {
+            UserService.instance = new UserService();
         }
-        return userService.instance;
+        return UserService.instance;
     }
     async fetchUser(id) {
         try {
@@ -169,6 +171,39 @@ users.user_id = ${id}
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
         }
     }
+    async fileHandler(id, req) {
+        try {
+            const file = req.file;
+            if (file?.mimetype.includes("spreadsheetml")) {
+                console.log(req.file, "file");
+                const workbook = new exceljs_1.default.Workbook();
+                const excel = await workbook.xlsx.readFile(file.path);
+                let allValues = [];
+                excel.eachSheet(function (worksheet, id) {
+                    worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+                        row.values;
+                        if (rowNumber !== 1) {
+                            allValues.push(row.values);
+                        }
+                    });
+                });
+                const valueArray = allValues.map((item) => {
+                    return [item[1], item[2], "2022-01-11"];
+                });
+                console.log(valueArray);
+                const [result] = await db_connection_1.db.query("INSERT INTO transactions (employee_id,amount,payment_date) VALUES ?", [valueArray]);
+                if (result.affectedRows > 1) {
+                    return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "data uploaded successfully");
+                }
+                else {
+                    throw new Error("unable to upload data");
+                }
+            }
+            return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, "unsupported file format");
+        }
+        catch (error) {
+            return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+        }
+    }
 }
-const userServ = userService.getInstance();
-exports.default = userServ;
+exports.userService = UserService.getInstance();

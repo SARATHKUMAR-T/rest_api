@@ -27,7 +27,11 @@ class userRoute {
     this.router.route("/reportmailer/:id").get(userInstance.reportMailer);
     this.router
       .route("/fileuploader/:id")
-      .post(upload.single("file"), userInstance.fileUploader);
+      .post(
+        userMiddlewareInstance.authMiddleware,
+        upload.single("file"),
+        userInstance.fileUploader
+      );
   }
 }
 

@@ -1,11 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userInstance = void 0;
-const userService_1 = __importDefault(require("../services/userService"));
-const http_status_codes_1 = require("http-status-codes");
+const services_1 = require("../services");
 class userController {
     static instance;
     constructor() { }
@@ -17,7 +13,7 @@ class userController {
     }
     async getUser(req, res, next) {
         try {
-            const result = await userService_1.default.fetchUser(req.params.id);
+            const result = await services_1.userService.fetchUser(req.params.id);
             res.status(result.status).json(result);
         }
         catch (error) {
@@ -26,7 +22,7 @@ class userController {
     }
     async newUser(req, res, next) {
         try {
-            const result = await userService_1.default.addUser(req.body);
+            const result = await services_1.userService.addUser(req.body);
             res.status(result.status).json(result);
         }
         catch (error) {
@@ -35,7 +31,7 @@ class userController {
     }
     async updateUser(req, res, next) {
         try {
-            const result = await userService_1.default.updateUser(req.body, req.params.id);
+            const result = await services_1.userService.updateUser(req.body, req.params.id);
             res.status(result.status).json(result);
         }
         catch (error) {
@@ -44,7 +40,7 @@ class userController {
     }
     async deleteUser(req, res, next) {
         try {
-            const result = await userService_1.default.removeUser(req.params.id);
+            const result = await services_1.userService.removeUser(req.params.id);
             res.status(result.status).json(result);
         }
         catch (error) {
@@ -53,7 +49,7 @@ class userController {
     }
     async getReport(req, res, next) {
         try {
-            const result = await userService_1.default.userReport(req.params.id);
+            const result = await services_1.userService.userReport(req.params.id);
             if (result.data)
                 return res.status(result.status).download(result.data);
             return res.status(result.status).json(result);
@@ -64,7 +60,7 @@ class userController {
     }
     async reportMailer(req, res, next) {
         try {
-            const result = await userService_1.default.reportMail(req.params.id, req.body.mailTo);
+            const result = await services_1.userService.reportMail(req.params.id, req.body.mailTo);
             return res.status(result.status).json(result);
         }
         catch (error) {
@@ -73,10 +69,8 @@ class userController {
     }
     async fileUploader(req, res, next) {
         try {
-            console.log("req received");
-            res.status(http_status_codes_1.StatusCodes.OK).json({
-                message: "file uploaded successfully",
-            });
+            const result = await services_1.userService.fileHandler(req.params.id, req);
+            return res.status(result.status).json(result);
         }
         catch (error) {
             next(error);

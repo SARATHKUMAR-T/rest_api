@@ -8,7 +8,7 @@ import multer from "multer";
 // ) => {
 //   if (
 //     file.mimetype.includes("excel") ||
-//     file.mimetype.includes("spreadsheetml")
+//     file.mimetype.includes("")
 //   ) {
 //     cb(null, true);
 //   } else {
@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     console.log(file);
 
-    cb(null, Date.now() + "-" + file.originalname);
+    cb(null, file.originalname);
   },
 });
 

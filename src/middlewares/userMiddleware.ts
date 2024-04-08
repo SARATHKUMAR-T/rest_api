@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import userServ from "../services/userService";
 import { tokenDecoder } from "../utils";
 import { StatusCodes } from "http-status-codes";
 import "dotenv/config";
+import { userService } from "../services";
 
 class middlewareController {
   private static instance: middlewareController;
@@ -25,7 +25,7 @@ class middlewareController {
             token,
             process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd"
           );
-          const result = await userServ.fetchUser(decoded.id);
+          const result = await userService.fetchUser(decoded.id);
           if ((result.status = 200)) next();
           else {
             return res.status(result.status).json(result);

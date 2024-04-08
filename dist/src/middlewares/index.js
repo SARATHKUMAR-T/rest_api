@@ -15,4 +15,4 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./errorHandlerMiddleware"), exports);
-// export * from "./userMiddleware";
+__exportStar(require("./userMiddleware"), exports);

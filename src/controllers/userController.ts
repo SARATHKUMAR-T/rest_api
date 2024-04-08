@@ -1,7 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import userServ from "../services/userService";
-import { upload } from "../utils";
-import { StatusCodes } from "http-status-codes";
+import { userService } from "../services";
 
 class userController {
   private static instance: userController;
@@ -17,7 +15,7 @@ class userController {
 
   public async getUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userServ.fetchUser(req.params.id);
+      const result = await userService.fetchUser(req.params.id);
       res.status(result.status).json(result);
     } catch (error) {
       next(error);
@@ -26,7 +24,7 @@ class userController {
 
   public async newUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userServ.addUser(req.body);
+      const result = await userService.addUser(req.body);
       res.status(result.status).json(result);
     } catch (error) {
       next(error);
@@ -34,7 +32,7 @@ class userController {
   }
   public async updateUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userServ.updateUser(req.body, req.params.id);
+      const result = await userService.updateUser(req.body, req.params.id);
       res.status(result.status).json(result);
     } catch (error) {
       next(error);
@@ -43,7 +41,7 @@ class userController {
 
   public async deleteUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userServ.removeUser(req.params.id);
+      const result = await userService.removeUser(req.params.id);
       res.status(result.status).json(result);
     } catch (error) {
       next(error);
@@ -52,7 +50,7 @@ class userController {
 
   public async getReport(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userServ.userReport(req.params.id);
+      const result = await userService.userReport(req.params.id);
       if (result.data) return res.status(result.status).download(result.data);
       return res.status(result.status).json(result);
     } catch (error) {
@@ -62,7 +60,10 @@ class userController {
 
   public async reportMailer(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await userServ.reportMail(req.params.id, req.body.mailTo);
+      const result = await userService.reportMail(
+        req.params.id,
+        req.body.mailTo
+      );
       return res.status(result.status).json(result);
     } catch (error) {
       next(error);
@@ -70,10 +71,8 @@ class userController {
   }
   public async fileUploader(req: Request, res: Response, next: NextFunction) {
     try {
-      console.log("req received");
-      res.status(StatusCodes.OK).json({
-        message: "file uploaded successfully",
-      });
+      const result = await userService.fileHandler(req.params.id, req);
+      return res.status(result.status).json(result);
     } catch (error) {
       next(error);
     }
@@ -82,7 +81,7 @@ class userController {
   // public async getBase64(req: Request, res: Response, next: NextFunction) {
   //   const id = req.params.id;
   //   try {
-  //     const result = await userServ.userReport(id);
+  //     const result = await userService.userReport(id);
 
   //     //  creation of excel sheet
   //     const workbook = new Excel.Workbook();
