@@ -1,13 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userMiddlewareInstance = void 0;
-const userService_1 = __importDefault(require("../services/userService"));
 const utils_1 = require("../utils");
 const http_status_codes_1 = require("http-status-codes");
 require("dotenv/config");
+const services_1 = require("../services");
 class middlewareController {
     static instance;
     constructor() { }
@@ -23,7 +20,7 @@ class middlewareController {
                 const token = req.headers["x-auth-token"];
                 if (typeof token === "string") {
                     const decoded = (0, utils_1.tokenDecoder)(token, process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd");
-                    const result = await userService_1.default.fetchUser(decoded.id);
+                    const result = await services_1.userService.fetchUser(decoded.id);
                     if ((result.status = 200))
                         next();
                     else {

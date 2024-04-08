@@ -4,6 +4,7 @@ import path from "path";
 import { db } from "../config/db_connection";
 import { APIresponse } from "../types";
 import { User } from "../types/user";
+import Excel from "exceljs";
 import {
   Encrypter,
   generateExcelBook,
@@ -11,17 +12,20 @@ import {
   tokenGenerator,
 } from "../utils";
 import "dotenv/config";
+import { Request } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
 
-class userService {
-  private static instance: userService;
+class UserService {
+  private static instance: UserService;
 
   private constructor() {}
 
-  public static getInstance(): userService {
-    if (!userService.instance) {
-      userService.instance = new userService();
+  public static getInstance(): UserService {
+    if (!UserService.instance) {
+      UserService.instance = new UserService();
     }
-    return userService.instance;
+    return UserService.instance;
   }
 
   public async fetchUser(id: string) {
@@ -253,8 +257,59 @@ users.user_id = ${id}
       );
     }
   }
+
+  async fileHandler(
+    id: string,
+    req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>
+  ) {
+    try {
+      const file = req.file;
+      if (file?.mimetype.includes("spreadsheetml")) {
+        console.log(req.file, "file");
+        const workbook = new Excel.Workbook();
+        const excel = await workbook.xlsx.readFile(file.path);
+        let allValues: any = [];
+        excel.eachSheet(function (worksheet, id) {
+          worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+            row.values;
+            if (rowNumber !== 1) {
+              allValues.push(row.values);
+            }
+          });
+        });
+        const valueArray = allValues.map((item: any) => {
+          return [item[1], item[2], "2022-01-11"];
+        });
+        console.log(valueArray);
+
+        const [result] = await db.query<ResultSetHeader>(
+          "INSERT INTO transactions (employee_id,amount,payment_date) VALUES ?",
+          [valueArray]
+        );
+        if (result.affectedRows > 1) {
+          return new APIresponse<null>(
+            false,
+            StatusCodes.OK,
+            "data uploaded successfully"
+          );
+        } else {
+          throw new Error("unable to upload data");
+        }
+      }
+
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        "unsupported file format"
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
 }
 
-const userServ = userService.getInstance();
-
-export default userServ;
+export const userService = UserService.getInstance();
