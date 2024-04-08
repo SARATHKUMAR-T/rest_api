@@ -10,6 +10,7 @@ export class APIresponse<T> implements ApiResponse<T> {
     public isError: boolean,
     public status: number,
     public message?: string,
-    public data?: T
+    public data?: T,
+    public token?: string
   ) {}
 }

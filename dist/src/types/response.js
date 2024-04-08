@@ -6,11 +6,13 @@ class APIresponse {
     status;
     message;
     data;
-    constructor(isError, status, message, data) {
+    token;
+    constructor(isError, status, message, data, token) {
         this.isError = isError;
         this.status = status;
         this.message = message;
         this.data = data;
+        this.token = token;
     }
 }
 exports.APIresponse = APIresponse;

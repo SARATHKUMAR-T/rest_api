@@ -18,3 +18,4 @@ __exportStar(require("./response"), exports);
 __exportStar(require("./user"), exports);
 __exportStar(require("./employee_info"), exports);
 __exportStar(require("./transaction"), exports);
+__exportStar(require("./mailOptions"), exports);
