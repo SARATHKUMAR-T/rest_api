@@ -23,12 +23,14 @@ class userRoute {
             .route("/user/:id")
             .get(controllers_1.userController.getUser)
             .patch(middlewares_1.userMiddleware.authMiddleware, controllers_1.userController.updateUser)
-            .delete(controllers_1.userController.deleteUser);
+            .delete(middlewares_1.userMiddleware.authMiddleware, controllers_1.userController.deleteUser);
+        this.router.use(middlewares_1.userMiddleware.authMiddleware);
         this.router.route("/report/:id").get(controllers_1.userController.getReport);
+        this.router.route("/encodedreport/:id").get(controllers_1.userController.getBase64);
         this.router.route("/reportmailer/:id").get(controllers_1.userController.reportMailer);
         this.router
             .route("/fileuploader/:id")
-            .post(middlewares_1.userMiddleware.authMiddleware, utils_1.upload.single("file"), controllers_1.userController.fileUploader);
+            .post(utils_1.upload.single("file"), controllers_1.userController.fileUploader);
     }
 }
 exports.userRouter = userRoute.getInstance();

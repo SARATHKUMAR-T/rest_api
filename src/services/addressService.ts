@@ -18,7 +18,7 @@ class AddressServ {
   public async getUserAddress(id: string) {
     try {
       const [result] = await db.query<RowDataPacket[]>(
-        `SELECT address FROM address WHERE user_id=${id} AND active=1`
+        `SELECT address FROM address WHERE user_id=${id} AND 1=(SELECT active from users WHERE user_id=${id})`
       );
       if (result.length === 0) {
         return new APIresponse<null>(

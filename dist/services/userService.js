@@ -9,8 +9,10 @@ const path_1 = __importDefault(require("path"));
 const db_connection_1 = require("../config/db_connection");
 const types_1 = require("../types");
 const exceljs_1 = __importDefault(require("exceljs"));
+const fs_1 = __importDefault(require("fs"));
 const utils_1 = require("../utils");
 require("dotenv/config");
+const js_base64_1 = require("js-base64");
 class UserService {
     static instance;
     constructor() { }
@@ -26,7 +28,7 @@ class UserService {
             if (result.length === 0) {
                 return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.NOT_FOUND, "No user Found");
             }
-            const token = (0, utils_1.tokenGenerator)({ id: result[0].user_id }, process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd");
+            const token = (0, utils_1.tokenGenerator)({ id: result[0].user_id });
             return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, result, token);
         }
         catch (error) {
@@ -37,7 +39,7 @@ class UserService {
         try {
             user.password = (0, utils_1.Encrypter)(user.password, 10);
             const [result] = await db_connection_1.db.query(`INSERT INTO users (first_name,last_name,email,password_) VALUES ('${user.first_name}','${user.last_name}','${user.email}','${user.password}')`);
-            const token = (0, utils_1.tokenGenerator)({ id: result.insertId }, process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd");
+            const token = (0, utils_1.tokenGenerator)({ id: result.insertId });
             return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "user added successfully", token);
         }
         catch (error) {
@@ -117,6 +119,56 @@ users.user_id = ${id}
         }
         catch (error) {
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+        }
+    }
+    async fileBase64(id, res) {
+        try {
+            const [result] = await db_connection_1.db.query(`SELECT 
+    CONCAT(users.first_name, " ", users.last_name) AS user_name,
+    employee_info.employee_id,
+    employee_info.role_,
+    address.address,
+    employee_info.employee_id ,
+	   transactions.amount,
+    transactions.payment_date
+FROM 
+    users
+INNER JOIN 
+    address ON users.user_id = address.user_id
+INNER JOIN 
+    employee_info ON users.user_id = employee_info.user_id
+INNER JOIN 
+    transactions ON employee_info.employee_id = transactions.employee_id
+WHERE 
+users.user_id = ${id}
+;
+`);
+            const workbook = (0, utils_1.generateExcelBook)("employee report", [
+                { key: "employee_id", header: "Employee Id" },
+                { key: "user_name", header: "Employee Name" },
+                { key: "role_", header: "Role" },
+                { key: "address", header: "Address" },
+                { key: "amount", header: "Salary" },
+                { key: "payment_date", header: "Pay Date" },
+            ], result);
+            const filepath = path_1.default.format({
+                dir: "./src/reports",
+                base: `${result[0].user_name}'s report.xlsx`,
+            });
+            await workbook.xlsx.writeFile(filepath);
+            fs_1.default.readFile(filepath, (err, data) => {
+                if (err) {
+                    const response = new types_1.APIresponse(true, http_status_codes_1.StatusCodes.UNPROCESSABLE_ENTITY, "unable to read file");
+                    res.status(http_status_codes_1.StatusCodes.UNPROCESSABLE_ENTITY).json(response);
+                }
+                const encoded = js_base64_1.Base64.encode(data.toString());
+                const result = new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, encoded);
+                res.status(http_status_codes_1.StatusCodes.OK).json(result);
+            });
+        }
+        catch (error) {
+            const err = new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+            res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json(err);
         }
     }
     async reportMail(id, mailTo) {

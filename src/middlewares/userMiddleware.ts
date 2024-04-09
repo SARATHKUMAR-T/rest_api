@@ -3,17 +3,18 @@ import { tokenDecoder } from "../utils";
 import { StatusCodes } from "http-status-codes";
 import "dotenv/config";
 import { userService } from "../services";
+import { APIresponse } from "../types";
 
-class middlewareController {
-  private static instance: middlewareController;
+class MiddlewareController {
+  private static instance: MiddlewareController;
 
   private constructor() {}
 
-  public static getInstance(): middlewareController {
-    if (!middlewareController.instance) {
-      middlewareController.instance = new middlewareController();
+  public static getInstance(): MiddlewareController {
+    if (!MiddlewareController.instance) {
+      MiddlewareController.instance = new MiddlewareController();
     }
-    return middlewareController.instance;
+    return MiddlewareController.instance;
   }
 
   public async authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -21,10 +22,7 @@ class middlewareController {
       if (req.headers["x-auth-token"]) {
         const token = req.headers["x-auth-token"];
         if (typeof token === "string") {
-          const decoded: any = tokenDecoder(
-            token,
-            process.env.SECRET_KEY ? process.env.SECRET_KEY : "sfd"
-          );
+          const decoded: any = tokenDecoder(token);
           const result = await userService.fetchUser(decoded.id);
           if ((result.status = 200)) next();
           else {
@@ -32,9 +30,15 @@ class middlewareController {
           }
         }
       } else {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          message: "Invalid token",
-        });
+        return res
+          .status(StatusCodes.UNAUTHORIZED)
+          .json(
+            new APIresponse<null>(
+              true,
+              StatusCodes.UNAUTHORIZED,
+              "invaild token"
+            )
+          );
       }
     } catch (error) {
       next(error);
@@ -42,4 +46,4 @@ class middlewareController {
   }
 }
 
-export const userMiddlewareInstance = middlewareController.getInstance();
+export const userMiddleware = MiddlewareController.getInstance();

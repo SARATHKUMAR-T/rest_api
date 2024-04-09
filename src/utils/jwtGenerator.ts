@@ -1,9 +1,16 @@
 import jwt from "jsonwebtoken";
+import "dotenv/config";
 
-export function tokenGenerator(val: any, secretKey: string): string {
-  return jwt.sign({ val }, secretKey);
+export function tokenGenerator(val: any): string {
+  return jwt.sign(
+    { val },
+    process.env.SECRET_KEY ? process.env.SECRET_KEY : "SAFGDDD"
+  );
 }
 
-export function tokenDecoder(token: string, secretKey: string) {
-  return jwt.verify(token, secretKey);
+export function tokenDecoder(token: string) {
+  return jwt.verify(
+    token,
+    process.env.SECRET_KEY ? process.env.SECRET_KEY : "SAFGDDD"
+  );
 }

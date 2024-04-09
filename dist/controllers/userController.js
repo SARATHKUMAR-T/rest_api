@@ -78,5 +78,13 @@ class UserController {
             next(error);
         }
     }
+    async getBase64(req, res, next) {
+        try {
+            await services_1.userService.fileBase64(req.params.id, res);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.userController = UserController.getInstance();
