@@ -1,6 +1,6 @@
 <!-- database setup -->
 
-Replace host,user and password with your own credentials in db_connection.ts
+Replace host,user,database name and password with your own credentials in .env file
 
 <!-- To start a server -->
 

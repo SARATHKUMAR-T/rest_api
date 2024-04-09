@@ -1,16 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import { userService } from "../services";
 
-class userController {
-  private static instance: userController;
+class UserController {
+  private static instance: UserController;
 
   private constructor() {}
 
-  public static getInstance(): userController {
-    if (!userController.instance) {
-      userController.instance = new userController();
+  public static getInstance(): UserController {
+    if (!UserController.instance) {
+      UserController.instance = new UserController();
     }
-    return userController.instance;
+    return UserController.instance;
   }
 
   public async getUser(req: Request, res: Response, next: NextFunction) {
@@ -72,55 +72,20 @@ class userController {
   public async fileUploader(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await userService.fileHandler(req.params.id, req);
-      return res.status(result.status).json(result);
+      if (result) {
+        return res.status(result.status).json(result);
+      }
     } catch (error) {
       next(error);
     }
   }
-
-  // public async getBase64(req: Request, res: Response, next: NextFunction) {
-  //   const id = req.params.id;
-  //   try {
-  //     const result = await userService.userReport(id);
-
-  //     //  creation of excel sheet
-  //     const workbook = new Excel.Workbook();
-  //     const worksheet = workbook.addWorksheet("employee report");
-
-  //     const reportColumns = [
-  //       { key: "employee_id", header: "Employee Id" },
-  //       { key: "user_name", header: "Employee Name" },
-  //       { key: "role_", header: "Role" },
-  //       { key: "address", header: "Address" },
-  //       { key: "amount", header: "Salary" },
-  //       { key: "payment_date", header: "Pay Date" },
-  //     ];
-  //     worksheet.columns = reportColumns;
-
-  //     result.forEach((item: any) => {
-  //       worksheet.addRow(item);
-  //     });
-
-  //     const filepath = path.format({
-  //       dir: "./src/reports",
-  //       base: `${result[0].user_name}'s report.xlsx`,
-  //     });
-  //     await workbook.xlsx.writeFile(filepath);
-  //     fs.readFile(filepath, (err, data) => {
-  //       if (err) {
-  //         return res.status(500).json({ message: "unable to fetch report" });
-  //       }
-  //       const encoded = Base64.encode(data.toString());
-  //       return res.status(200).json({
-  //         File: encoded,
-  //         message: "Report fetched successfully",
-  //       });
-  //     });
-  //   } catch (error: Error | any) {
-  //     console.log(error, "error while fetching report");
-  //     next(new AppError(error.message, 404));
-  //   }
-  // }
+  public async getBase64(req: Request, res: Response, next: NextFunction) {
+    try {
+      await userService.fileBase64(req.params.id, res);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
-export const userInstance = userController.getInstance();
+export const userController = UserController.getInstance();

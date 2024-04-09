@@ -1,20 +1,20 @@
-import { Response } from "express";
+import { Request } from "express";
 import multer from "multer";
 
-// const excelFilter = (
-//   req: Response,
-//   file: Express.Multer.File,
-//   cb: (message: string | null, destination: string) => void
-// ) => {
-//   if (
-//     file.mimetype.includes("excel") ||
-//     file.mimetype.includes("")
-//   ) {
-//     cb(null, true);
-//   } else {
-//     cb("Please upload only excel file.", false);
-//   }
-// };
+function fileFilter(
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+): void {
+  if (
+    file.mimetype.includes("excel") ||
+    file.mimetype.includes("spreadsheetml")
+  ) {
+    cb(null, true);
+  } else {
+    return cb(new Error("invalid file format"));
+  }
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -27,4 +27,4 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ storage: storage });
+export const upload = multer({ storage: storage, fileFilter: fileFilter });

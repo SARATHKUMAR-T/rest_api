@@ -1,19 +1,16 @@
 import nodemailer from "nodemailer";
 import { MailOptions } from "../types";
+import "dotenv/config";
 
-export function mailerGenerator(
-  user: string,
-  password: string,
-  options: MailOptions
-) {
+export function mailerGenerator(options: MailOptions) {
   var transporter = nodemailer.createTransport({
     service: "gmail",
     host: "smtp.gmail.com",
     port: 465,
     secure: true,
     auth: {
-      user: user,
-      pass: password,
+      user: process.env.EMAIL_AUTH_USER,
+      pass: process.env.EMAIL_AUTH_PASSWORD,
     },
   });
 
