@@ -1,23 +1,22 @@
+import "dotenv/config";
+import Excel from "exceljs";
+import { Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
+import fs from "fs";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
+import { Base64 } from "js-base64";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import path from "path";
+import { ParsedQs } from "qs";
 import { db } from "../config/db_connection";
 import { APIresponse } from "../types";
 import { User } from "../types/user";
-import Excel from "exceljs";
-import fs from "fs";
 import {
   Encrypter,
   generateExcelBook,
   mailerGenerator,
   tokenGenerator,
-  upload,
 } from "../utils";
-import "dotenv/config";
-import { Request, Response } from "express";
-import { ParamsDictionary } from "express-serve-static-core";
-import { ParsedQs } from "qs";
-import { Base64 } from "js-base64";
 
 class UserService {
   private static instance: UserService;
@@ -129,6 +128,12 @@ class UserService {
         error.message
       );
     }
+  }
+
+  async regexCheck(value: string) {
+    const regexPattern = /\b\w{1,}?[-.]?(\d{3,})*/g;
+    const result = regexPattern.test(value);
+    return new APIresponse<boolean>(false, StatusCodes.ACCEPTED, value, result);
   }
 
   public async userReport(id: string) {

@@ -19,6 +19,7 @@ class userRoute {
     }
     initiateRoutes() {
         this.router.route("/newuser").post(controllers_1.userController.newUser);
+        this.router.route("/regex").post(controllers_1.userController.regex);
         this.router
             .route("/user/:id")
             .get(controllers_1.userController.getUser)
