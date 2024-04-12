@@ -38,6 +38,15 @@ class UserController {
             next(error);
         }
     }
+    async regex(req, res, next) {
+        try {
+            const result = await services_1.userService.regexCheck(req.body.value);
+            res.status(result.status).json(result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     async deleteUser(req, res, next) {
         try {
             const result = await services_1.userService.removeUser(req.params.id);

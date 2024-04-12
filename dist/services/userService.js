@@ -4,15 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userService = void 0;
+require("dotenv/config");
+const exceljs_1 = __importDefault(require("exceljs"));
+const fs_1 = __importDefault(require("fs"));
 const http_status_codes_1 = require("http-status-codes");
+const js_base64_1 = require("js-base64");
 const path_1 = __importDefault(require("path"));
 const db_connection_1 = require("../config/db_connection");
 const types_1 = require("../types");
-const exceljs_1 = __importDefault(require("exceljs"));
-const fs_1 = __importDefault(require("fs"));
 const utils_1 = require("../utils");
-require("dotenv/config");
-const js_base64_1 = require("js-base64");
 class UserService {
     static instance;
     constructor() { }
@@ -79,6 +79,11 @@ class UserService {
         catch (error) {
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
         }
+    }
+    async regexCheck(value) {
+        const regexPattern = /\b\w{1,}?[-.]?(\d{3,})*/g;
+        const result = regexPattern.test(value);
+        return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.ACCEPTED, value, result);
     }
     async userReport(id) {
         try {
