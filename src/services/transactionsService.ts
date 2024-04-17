@@ -1,8 +1,7 @@
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
+import { RowDataPacket } from "mysql2";
 import { db } from "../config/db_connection";
 import { APIresponse, Transaction } from "../types";
-import { EmployeeInfo } from "../types/employee_info";
 
 class TransactionServ {
   private static instance: TransactionServ;

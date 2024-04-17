@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { AddressService } from "../services";
+import { AddressServiceS1 } from "../services/addressS1";
 
 class addressController {
   private static instance: addressController;
@@ -15,7 +15,7 @@ class addressController {
 
   public async getUserAddress(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await AddressService.getUserAddress(req.params.id);
+      const result = await AddressServiceS1.getUserAddress(req.params.id);
       res.status(result.status).json(result);
     } catch (error) {
       next(error);
@@ -24,7 +24,7 @@ class addressController {
 
   public async addUserAddress(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await AddressService.addUserAddress(
+      const result = await AddressServiceS1.addUserAddress(
         req.params.id,
         req.body.address
       );
@@ -39,7 +39,7 @@ class addressController {
     next: NextFunction
   ) {
     try {
-      const result = await AddressService.updateUserAddress(
+      const result = await AddressServiceS1.updateUserAddress(
         req.params.id,
         req.body.address
       );
@@ -55,7 +55,7 @@ class addressController {
     next: NextFunction
   ) {
     try {
-      const result = await AddressService.deleteUserAddress(req.params.id);
+      const result = await AddressServiceS1.deleteUserAddress(req.params.id);
       res.status(result.status).json(result);
     } catch (error) {
       next(error);
