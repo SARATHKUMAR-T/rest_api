@@ -18,3 +18,4 @@ __exportStar(require("./userController"), exports);
 __exportStar(require("./addressController"), exports);
 __exportStar(require("./transactionsController"), exports);
 __exportStar(require("./employeeInfoController"), exports);
+__exportStar(require("./redisController"), exports);

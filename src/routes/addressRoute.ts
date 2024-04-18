@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { addressControl } from "../controllers";
 class AddressRoute {
   private static instance: AddressRoute;
   router = Router();
@@ -14,12 +13,7 @@ class AddressRoute {
     return AddressRoute.instance;
   }
   initiateRoutes() {
-    this.router
-      .route("/address/:id")
-      .post(addressControl.addUserAddress)
-      .get(addressControl.getUserAddress)
-      .patch(addressControl.updateUserAddress)
-      .delete(addressControl.deleteUserAddress);
+    this.router.route("/address/:id");
   }
 }
 

@@ -10,6 +10,8 @@ class ErrorHandler {
     res: Response,
     next: NextFunction
   ) {
+    console.log("global error handler executed");
+
     if (err.message == "invalid file format") {
       return res.status(StatusCodes.BAD_REQUEST).json({
         message: "unsupported file format,please upload excelsheet only",

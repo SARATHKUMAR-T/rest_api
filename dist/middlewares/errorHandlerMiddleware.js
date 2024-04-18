@@ -5,6 +5,7 @@ const http_status_codes_1 = require("http-status-codes");
 class ErrorHandler {
     constructor() { }
     async globalErrorHandler(err, req, res, next) {
+        console.log("global error handler executed");
         if (err.message == "invalid file format") {
             return res.status(http_status_codes_1.StatusCodes.BAD_REQUEST).json({
                 message: "unsupported file format,please upload excelsheet only",

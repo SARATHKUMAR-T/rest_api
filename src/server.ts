@@ -3,6 +3,8 @@ import "dotenv/config";
 import express, { Application } from "express";
 import morgan from "morgan";
 import Routes from "./routes";
+import { redisClient } from "./config";
+import { erroHandler } from "./middlewares";
 
 class Server {
   private static instance: Server;
@@ -48,8 +50,13 @@ class Server {
   }
 
   //   starting the server
-  private start() {
+  private async start() {
     // db connection
+
+    await redisClient.connect();
+    redisClient.on("error", (error) => {
+      console.log("redis client error", error);
+    });
 
     this.app
       .listen(this.PORT, (): void => {

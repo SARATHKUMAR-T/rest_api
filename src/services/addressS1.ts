@@ -6,7 +6,6 @@ import { AddressServiceAb } from "../abstarctService/abstractAddressService";
 
 class AddressServS1 extends AddressServiceAb {
   private static instance: AddressServS1;
-
   private constructor() {
     super();
   }

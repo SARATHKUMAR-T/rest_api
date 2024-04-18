@@ -8,6 +8,7 @@ require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
 const routes_1 = __importDefault(require("./routes"));
+const config_1 = require("./config");
 class Server {
     static instance;
     app = (0, express_1.default)();
@@ -44,8 +45,12 @@ class Server {
         new routes_1.default(this.app);
     }
     //   starting the server
-    start() {
+    async start() {
         // db connection
+        await config_1.redisClient.connect();
+        config_1.redisClient.on("error", (error) => {
+            console.log("redis client error", error);
+        });
         this.app
             .listen(this.PORT, () => {
             console.log(`Server is listening on ${this.PORT}`);
