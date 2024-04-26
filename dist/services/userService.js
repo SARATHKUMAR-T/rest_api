@@ -13,6 +13,7 @@ const path_1 = __importDefault(require("path"));
 const db_connection_1 = require("../config/db_connection");
 const types_1 = require("../types");
 const utils_1 = require("../utils");
+const bullQueueBuilder_1 = require("../queueBuilder/bullQueueBuilder");
 class UserService {
     static instance;
     constructor() { }
@@ -41,6 +42,36 @@ class UserService {
             const [result] = await db_connection_1.db.query(`INSERT INTO users (first_name,last_name,email,password_) VALUES ('${user.first_name}','${user.last_name}','${user.email}','${user.password}')`);
             const token = (0, utils_1.tokenGenerator)({ id: result.insertId });
             return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "user added successfully", token);
+        }
+        catch (error) {
+            return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+        }
+    }
+    async addReportLog(id) {
+        try {
+            const [result] = await db_connection_1.db.query(`INSERT INTO report_log (id) VALUES (${id})`);
+            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "log added");
+        }
+        catch (error) {
+            return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+        }
+    }
+    async updateReportLog(id, log, status) {
+        try {
+            let sql = `UPDATE report_log SET`;
+            if (log) {
+                sql += ` log = '${log}',`;
+            }
+            if (status) {
+                sql += ` status = '${status}',`;
+            }
+            if (!status) {
+                sql += ` status = '${status}',`;
+            }
+            sql = sql.slice(0, -1);
+            sql += ` WHERE id = ${id}`;
+            const [result] = await db_connection_1.db.query(sql);
+            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "log updated");
         }
         catch (error) {
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
@@ -121,6 +152,27 @@ users.user_id = ${id}
             });
             await workbook.xlsx.writeFile(filepath);
             return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, filepath);
+        }
+        catch (error) {
+            return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+        }
+    }
+    async reportSender(employees) {
+        try {
+            employees.map(async (item) => {
+                await exports.userService.addReportLog(item);
+                await bullQueueBuilder_1.reportQueue.add(item);
+            });
+            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, "reports will be genereted shortly and will send to employees mail");
+        }
+        catch (error) {
+            return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
+        }
+    }
+    async reportStatus(id) {
+        try {
+            const [result] = await db_connection_1.db.query(`SELECT * FROM report_log WHERE id=${id} `);
+            return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, result);
         }
         catch (error) {
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
@@ -213,7 +265,6 @@ users.user_id = ${id}
             await workbook.xlsx.writeFile(filepath);
             console.log(filepath);
             (0, utils_1.mailerGenerator)({
-                from: "spellbee931@gmail.com",
                 to: mailTo,
                 subject: `${result[0].user_name}-Report`,
                 attachments: [

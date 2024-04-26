@@ -23,6 +23,8 @@ class userRoute {
       .get(userController.getUser)
       .patch(userMiddleware.authMiddleware, userController.updateUser)
       .delete(userMiddleware.authMiddleware, userController.deleteUser);
+    this.router.route("/reports").post(userController.sendEmployeeReports);
+    this.router.route("/reportstatus/:id").get(userController.getReportStatus);
     this.router.use(userMiddleware.authMiddleware);
     this.router.route("/report/:id").get(userController.getReport);
     this.router.route("/encodedreport/:id").get(userController.getBase64);

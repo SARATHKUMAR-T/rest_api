@@ -25,6 +25,8 @@ class userRoute {
             .get(controllers_1.userController.getUser)
             .patch(middlewares_1.userMiddleware.authMiddleware, controllers_1.userController.updateUser)
             .delete(middlewares_1.userMiddleware.authMiddleware, controllers_1.userController.deleteUser);
+        this.router.route("/reports").post(controllers_1.userController.sendEmployeeReports);
+        this.router.route("/reportstatus/:id").get(controllers_1.userController.getReportStatus);
         this.router.use(middlewares_1.userMiddleware.authMiddleware);
         this.router.route("/report/:id").get(controllers_1.userController.getReport);
         this.router.route("/encodedreport/:id").get(controllers_1.userController.getBase64);

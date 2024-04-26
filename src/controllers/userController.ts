@@ -65,6 +65,30 @@ class UserController {
       next(error);
     }
   }
+  public async sendEmployeeReports(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const result = await userService.reportSender(req.body.employees);
+      return res.status(result.status).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+  public async getReportStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const result = await userService.reportStatus(req.params.id);
+      return res.status(result.status).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 
   public async reportMailer(req: Request, res: Response, next: NextFunction) {
     try {
