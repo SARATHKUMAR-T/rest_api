@@ -17,6 +17,7 @@ import {
   mailerGenerator,
   tokenGenerator,
 } from "../utils";
+import { reportQueue } from "../queueBuilder/bullQueueBuilder";
 
 class UserService {
   private static instance: UserService;
@@ -74,6 +75,44 @@ class UserService {
         "user added successfully",
         token
       );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
+  public async addReportLog(id: number) {
+    try {
+      const [result] = await db.query<ResultSetHeader>(
+        `INSERT INTO report_log (id) VALUES (${id})`
+      );
+      return new APIresponse<string>(false, StatusCodes.OK, "log added");
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
+  public async updateReportLog(id: string, log: string, status: number) {
+    try {
+      let sql = `UPDATE report_log SET`;
+      if (log) {
+        sql += ` log = '${log}',`;
+      }
+      if (status) {
+        sql += ` status = '${status}',`;
+      }
+      if (!status) {
+        sql += ` status = '${status}',`;
+      }
+      sql = sql.slice(0, -1);
+      sql += ` WHERE id = ${id}`;
+      const [result] = await db.query<ResultSetHeader>(sql);
+      return new APIresponse<string>(false, StatusCodes.OK, "log updated");
     } catch (error: Error | any) {
       return new APIresponse<null>(
         true,
@@ -183,6 +222,45 @@ users.user_id = ${id}
         StatusCodes.OK,
         ReasonPhrases.OK,
         filepath
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
+  public async reportSender(employees: number[]) {
+    try {
+      employees.map(async (item) => {
+        await userService.addReportLog(item);
+        await reportQueue.add(item);
+      });
+      return new APIresponse<null>(
+        false,
+        StatusCodes.OK,
+        "reports will be genereted shortly and will send to employees mail"
+      );
+    } catch (error: Error | any) {
+      return new APIresponse<null>(
+        true,
+        StatusCodes.BAD_REQUEST,
+        error.message
+      );
+    }
+  }
+  public async reportStatus(id: string) {
+    try {
+      const [result] = await db.query<RowDataPacket[]>(
+        `SELECT * FROM report_log WHERE id=${id} `
+      );
+
+      return new APIresponse<RowDataPacket[]>(
+        false,
+        StatusCodes.OK,
+        ReasonPhrases.OK,
+        result
       );
     } catch (error: Error | any) {
       return new APIresponse<null>(
@@ -308,7 +386,6 @@ users.user_id = ${id}
       console.log(filepath);
 
       mailerGenerator({
-        from: "spellbee931@gmail.com",
         to: mailTo,
         subject: `${result[0].user_name}-Report`,
         attachments: [

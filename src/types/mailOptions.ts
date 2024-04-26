@@ -1,11 +1,13 @@
 export interface MailOptions {
-  from: string;
   to: string;
   subject: string;
+  body?: string;
+  text?: string;
   attachments?: [
     {
+      path?: string;
       filename?: string;
-      path: string;
+      url?: string;
     }
   ];
 }

@@ -67,6 +67,24 @@ class UserController {
             next(error);
         }
     }
+    async sendEmployeeReports(req, res, next) {
+        try {
+            const result = await services_1.userService.reportSender(req.body.employees);
+            return res.status(result.status).json(result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async getReportStatus(req, res, next) {
+        try {
+            const result = await services_1.userService.reportStatus(req.params.id);
+            return res.status(result.status).json(result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     async reportMailer(req, res, next) {
         try {
             const result = await services_1.userService.reportMail(req.params.id, req.body.mailTo);

@@ -14,9 +14,12 @@ export function mailerGenerator(options: MailOptions) {
     },
   });
 
-  transporter.sendMail(options, (err, info) => {
-    if (err) {
-      console.log(err, "error from nodemailer");
+  transporter.sendMail(
+    { from: "spellbee931@gmail.com", ...options },
+    (err, info) => {
+      if (err) {
+        console.log(err, "error from nodemailer");
+      }
     }
-  });
+  );
 }

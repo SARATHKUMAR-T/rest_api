@@ -17,7 +17,7 @@ function mailerGenerator(options) {
             pass: process.env.EMAIL_AUTH_PASSWORD,
         },
     });
-    transporter.sendMail(options, (err, info) => {
+    transporter.sendMail({ from: "spellbee931@gmail.com", ...options }, (err, info) => {
         if (err) {
             console.log(err, "error from nodemailer");
         }
