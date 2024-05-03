@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userController = void 0;
 const services_1 = require("../services");
+const fs_1 = __importDefault(require("fs"));
 class UserController {
     static instance;
     constructor() { }
@@ -108,6 +112,26 @@ class UserController {
     async getBase64(req, res, next) {
         try {
             await services_1.userService.fileBase64(req.params.id, res);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async videoStreaming(req, res, next) {
+        try {
+            const videoPath = "./src/reports/sora.mp4";
+            res.status(206).header({ "content-type": "video/mp4" });
+            const file = fs_1.default.createReadStream(videoPath);
+            file.pipe(res);
+            file.on("data", (data) => {
+                console.log(data);
+                console.log("______________________________");
+            });
+            file.on("end", () => {
+                console.log("video streaming ended");
+            });
+            console.log(file, "file");
+            console.log("video streaming");
         }
         catch (error) {
             next(error);

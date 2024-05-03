@@ -5,7 +5,9 @@
   "main": "server.ts",
   "scripts": {
     "start": "nodemon ./src/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -w",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rimraf dist"
   },
   "keywords": [],
   "author": "sarath",

@@ -24,6 +24,7 @@ class userRoute {
       .patch(userMiddleware.authMiddleware, userController.updateUser)
       .delete(userMiddleware.authMiddleware, userController.deleteUser);
     this.router.route("/reports").post(userController.sendEmployeeReports);
+    this.router.route("/video").get(userController.videoStreaming);
     this.router.route("/reportstatus/:id").get(userController.getReportStatus);
     this.router.use(userMiddleware.authMiddleware);
     this.router.route("/report/:id").get(userController.getReport);

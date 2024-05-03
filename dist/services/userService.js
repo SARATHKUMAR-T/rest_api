@@ -33,6 +33,7 @@ class UserService {
             return new types_1.APIresponse(false, http_status_codes_1.StatusCodes.OK, http_status_codes_1.ReasonPhrases.OK, result, token);
         }
         catch (error) {
+            console.log(error, "error for conn issue");
             return new types_1.APIresponse(true, http_status_codes_1.StatusCodes.BAD_REQUEST, error.message);
         }
     }
