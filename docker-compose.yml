@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  mysqldb:
+    container_name: mysql_container
+    image: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=123
+    ports:
+      - 3306:3306
+
+    volumes:
+      - my_db:/var/lib/mysql
+      - ./dbMigration.sql:/docker-entrypoint-initdb.d/dbMigration.sql
+
+  api:
+    container_name: node_app
+    build: .
+    ports:
+      - 9000:9000
+    volumes:
+      - .:/docker_rest
+    depends_on:
+      - mysqldb
+    env_file: ./.env
+    environment:
+      - PORT=9000
+      - DB_HOST=127.0.0.1
+      - DB_USER=root
+      - DB_PASSWORD=123
+      - DB_NAME=task1
+      - SECRET_KEY=ddefihehfe
+      - EMAIL_AUTH_USER=spellbee931@gmail.com
+      - EMAIL_AUTH_PASSWORD=iyodaocmlnjdrhkj
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+      - BUCKET_NAME=imagescovai
+      - BUCKET_REGION=us-east-1
+      - AWS_ACCESS_KEY=AKIAZOYP6ODLGQG25UGJ
+      - AWS_SECRET_KEY=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
+
+volumes:
+  my_db: {}
