@@ -53,6 +53,7 @@ class UserService {
         token
       );
     } catch (error: Error | any) {
+      console.log(error, "error for conn issue");
       return new APIresponse<null>(
         true,
         StatusCodes.BAD_REQUEST,
