@@ -437,7 +437,7 @@ users.user_id = ${id}
           "INSERT INTO transactions (employee_id,amount,payment_date) VALUES ?",
           [valueArray]
         );
-        if (result.affectedRows > 1) {
+        if (result.affectedRows > 0) {
           return new APIresponse<null>(
             false,
             StatusCodes.OK,
