@@ -35,7 +35,7 @@ class Server {
 
   //   config method
   private config(): void {
-    this.app.use(express.static(`${__dirname}/reports`));
+    this.app.use(express.static(`src/reports`));
     this.app.use(cors());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
