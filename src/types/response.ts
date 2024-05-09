@@ -5,7 +5,7 @@ export interface ApiResponse<T> {
   status: number;
 }
 
-export class APIresponse<T> implements ApiResponse<T> {
+export class APIresponse<T> {
   constructor(
     public isError: boolean,
     public status: number,

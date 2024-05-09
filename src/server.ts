@@ -3,6 +3,8 @@ import "dotenv/config";
 import express, { Application } from "express";
 import morgan from "morgan";
 import Routes from "./routes";
+import os from "os";
+import cluster from "cluster";
 
 class Server {
   private static instance: Server;
@@ -47,9 +49,11 @@ class Server {
     new Routes(this.app);
   }
 
+  // private
+
   //   starting the server
   private start() {
-    // db connection
+    const numOfCpus = os.cpus().length;
 
     this.app
       .listen(this.PORT, (): void => {
